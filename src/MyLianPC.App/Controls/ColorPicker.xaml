@@ -1,0 +1,85 @@
+<UserControl x:Class="MyLianPC.App.Controls.ColorPicker"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <StackPanel>
+        <Grid Height="150">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="12" />
+                <ColumnDefinition Width="22" />
+            </Grid.ColumnDefinitions>
+            <!-- Saturation (x) / value (y) square -->
+            <Grid x:Name="SvArea" Grid.Column="0" ClipToBounds="True" Cursor="Cross"
+                  MouseLeftButtonDown="Sv_Down" MouseMove="Sv_Move" MouseLeftButtonUp="Sv_Up">
+                <Rectangle x:Name="HueFill" Fill="Red" RadiusX="6" RadiusY="6" />
+                <Rectangle RadiusX="6" RadiusY="6">
+                    <Rectangle.Fill>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                            <GradientStop Color="White" Offset="0" />
+                            <GradientStop Color="#00FFFFFF" Offset="1" />
+                        </LinearGradientBrush>
+                    </Rectangle.Fill>
+                </Rectangle>
+                <Rectangle RadiusX="6" RadiusY="6">
+                    <Rectangle.Fill>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Color="#00000000" Offset="0" />
+                            <GradientStop Color="Black" Offset="1" />
+                        </LinearGradientBrush>
+                    </Rectangle.Fill>
+                </Rectangle>
+                <Canvas IsHitTestVisible="False">
+                    <Ellipse x:Name="SvThumb" Width="14" Height="14" Stroke="White" StrokeThickness="2">
+                        <Ellipse.Effect><DropShadowEffect BlurRadius="4" ShadowDepth="0" Opacity="0.8" /></Ellipse.Effect>
+                    </Ellipse>
+                </Canvas>
+            </Grid>
+            <!-- Hue bar -->
+            <Grid x:Name="HueArea" Grid.Column="2" Cursor="Hand"
+                  MouseLeftButtonDown="Hue_Down" MouseMove="Hue_Move" MouseLeftButtonUp="Hue_Up">
+                <Rectangle RadiusX="6" RadiusY="6">
+                    <Rectangle.Fill>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Color="#FF0000" Offset="0" />
+                            <GradientStop Color="#FFFF00" Offset="0.167" />
+                            <GradientStop Color="#00FF00" Offset="0.333" />
+                            <GradientStop Color="#00FFFF" Offset="0.5" />
+                            <GradientStop Color="#0000FF" Offset="0.667" />
+                            <GradientStop Color="#FF00FF" Offset="0.833" />
+                            <GradientStop Color="#FF0000" Offset="1" />
+                        </LinearGradientBrush>
+                    </Rectangle.Fill>
+                </Rectangle>
+                <Canvas IsHitTestVisible="False">
+                    <Border x:Name="HueThumb" Width="26" Height="6" Canvas.Left="-2" BorderBrush="White" BorderThickness="2" CornerRadius="3" />
+                </Canvas>
+            </Grid>
+        </Grid>
+
+        <Grid Margin="0,10,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Border x:Name="Swatch" Width="34" Height="34" CornerRadius="6" BorderThickness="1"
+                    BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" />
+            <TextBox x:Name="HexBox" Grid.Column="1" Margin="10,0" VerticalContentAlignment="Center" FontFamily="Consolas"
+                     ToolTip="Hex color, e.g. #00FFAA" KeyDown="HexBox_KeyDown" LostFocus="HexBox_LostFocus" />
+            <Button Grid.Column="2" Content="Save color" Click="SaveColor_Click" ToolTip="Add to your saved colors" />
+        </Grid>
+
+        <TextBlock Text="Palette" Style="{StaticResource Caption}" Margin="0,10,0,4" />
+        <ItemsControl x:Name="Palette">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Button Width="26" Height="26" Margin="0,0,6,6" Padding="0" Click="PaletteColor_Click" Tag="{Binding}"
+                            ToolTip="{Binding}" Background="{Binding Converter={StaticResource ColorToBrush}}" BorderThickness="1" />
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </StackPanel>
+</UserControl>

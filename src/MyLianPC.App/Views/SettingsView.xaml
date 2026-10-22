@@ -1,0 +1,132 @@
+<UserControl x:Class="MyLianPC.App.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,8,16">
+        <StackPanel MaxWidth="900" HorizontalAlignment="Left">
+            <TextBlock Text="Settings" Style="{StaticResource PageTitle}" />
+            <TextBlock Text="Appearance and app options are saved per Windows account. They never change lighting, the LCD or cooling."
+                       Style="{StaticResource PageSubtitle}" />
+
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock Text="Appearance" Style="{StaticResource SectionTitle}" />
+                    <StackPanel Orientation="Horizontal">
+                        <RadioButton x:Name="ThemeDark" Content="Dark" GroupName="theme" Margin="0,0,20,0" Checked="Theme_Checked" />
+                        <RadioButton x:Name="ThemeLight" Content="Light" GroupName="theme" Margin="0,0,20,0" Checked="Theme_Checked" />
+                        <RadioButton x:Name="ThemeSystem" Content="Use Windows setting" GroupName="theme" Checked="Theme_Checked" />
+                    </StackPanel>
+                    <TextBlock Style="{StaticResource Caption}" Margin="0,8,0,0"
+                               Text="'Use Windows setting' follows Settings → Personalization → Colors → Choose your app mode, and switches automatically when you change it." />
+                    <Grid Margin="0,14,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="160" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="52" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Interface size" VerticalAlignment="Center" />
+                        <Slider x:Name="ScaleSlider" Grid.Column="1" Minimum="80" Maximum="140" TickFrequency="10" IsSnapToTickEnabled="True"
+                                VerticalAlignment="Center" ValueChanged="Scale_Changed" />
+                        <TextBlock x:Name="ScaleValue" Grid.Column="2" TextAlignment="Right" VerticalAlignment="Center" FontWeight="SemiBold" />
+                    </Grid>
+                    <TextBlock Style="{StaticResource Caption}" Margin="0,4,0,0"
+                               Text="80–140 %. Ctrl + and Ctrl − do the same, Ctrl + 0 resets it. Kept with the rest of this Windows account's settings, so every account keeps its own size." />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock Text="Readings" Style="{StaticResource SectionTitle}" />
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                        <TextBlock Text="Temperatures in" VerticalAlignment="Center" Width="160" />
+                        <RadioButton x:Name="UnitC" Content="Celsius" GroupName="unit" Margin="0,0,20,0" Checked="Pref_Changed" />
+                        <RadioButton x:Name="UnitF" Content="Fahrenheit" GroupName="unit" Checked="Pref_Changed" />
+                    </StackPanel>
+                    <TextBlock Style="{StaticResource Caption}" Margin="0,0,0,8"
+                               Text="Used by the dashboard, the charts and the cooler LCD. The LCD page can still show its own scale per profile." />
+                    <DockPanel>
+                        <TextBlock Text="Dashboard refresh" VerticalAlignment="Center" Width="160" />
+                        <TextBlock DockPanel.Dock="Right" Width="70" TextAlignment="Right" VerticalAlignment="Center" Text="{Binding Value, ElementName=RefreshSlider, StringFormat={}{0:0} ms}" />
+                        <Slider x:Name="RefreshSlider" Minimum="250" Maximum="5000" TickFrequency="250" IsSnapToTickEnabled="True" ValueChanged="Pref_Changed" />
+                    </DockPanel>
+                    <TextBlock Style="{StaticResource Caption}" Margin="0,8,0,0" Text="How often this window asks the service for readings. The service samples sensors once per second regardless, which is gentle on the hardware." />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock Text="Startup and background" Style="{StaticResource SectionTitle}" />
+                    <CheckBox x:Name="StartupBox" Content="Start MyLianPC automatically when Windows starts (in the notification area)"
+                              Click="Startup_Click" Margin="0,0,0,8" />
+                    <TextBlock x:Name="StartupState" Style="{StaticResource Caption}" Margin="0,0,0,8" />
+                    <CheckBox x:Name="TrayBox" Content="Closing the window keeps MyLianPC in the notification area" Click="Pref_Changed" />
+                    <TextBlock Style="{StaticResource Caption}" Margin="0,10,0,0"
+                               Text="The hardware itself is controlled by the MyLianPC Windows service, which starts with Windows before anyone signs in. Closing or not starting this window never stops it." />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock Text="Service" Style="{StaticResource SectionTitle}" />
+                    <TextBlock x:Name="ServiceState" Margin="0,0,0,10" Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="Restart service" Click="RestartService_Click" Margin="0,0,8,0" ToolTip="Needs administrator approval" />
+                        <Button Content="Open log folder" Click="Logs_Click" />
+                    </StackPanel>
+                    <CheckBox x:Name="FlashBox" Content="Store motherboard lighting in the controller so it survives power loss without software" Margin="0,12,0,0" Click="Flash_Click" />
+                    <CheckBox x:Name="FanLightingBox" Content="Light the radiator fans with the pump ring (experimental; when off their LEDs are switched off)" Margin="0,8,0,0" Click="FanLighting_Click" />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock Text="Vendor software" Style="{StaticResource SectionTitle}" />
+                    <TextBlock Style="{StaticResource Caption}" Margin="0,0,0,10"
+                               Text="These programs control the same hardware and would override MyLianPC (this is what changed your lighting when switching accounts). Taking over disables their background parts; nothing is uninstalled and Restore puts everything back. Needs administrator approval." />
+                    <ItemsControl x:Name="VendorList">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,4">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="260" /><ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                                        <TextBlock Text="{Binding State}" Style="{StaticResource Caption}" />
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="1" Text="{Binding Description}" Style="{StaticResource Caption}" VerticalAlignment="Center" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                        <Button Content="Take over from vendor software" Click="Takeover_Click" Style="{DynamicResource AccentButtonStyle}" Margin="0,0,8,0" />
+                        <Button Content="Restore vendor software" Click="Restore_Click" />
+                    </StackPanel>
+
+                    <Separator Margin="0,16" />
+                    <TextBlock Text="Windows Dynamic Lighting (this account)" FontWeight="SemiBold" />
+                    <TextBlock x:Name="DynamicState" Style="{StaticResource Caption}" Margin="0,4,0,8" />
+                    <Button Content="Turn off Dynamic Lighting for the motherboard in this account" Click="Dynamic_Click" HorizontalAlignment="Left" />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock Text="Reset" Style="{StaticResource SectionTitle}" />
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="Reset profiles to the examples" Click="ResetProfiles_Click" Margin="0,0,8,0" />
+                        <Button Content="Restore default fan behavior" Click="RestoreCooling_Click" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock Text="About" Style="{StaticResource SectionTitle}" />
+                    <TextBlock x:Name="About" TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                    <Button Content="Licenses and third-party notices" Click="Licenses_Click" HorizontalAlignment="Left" Margin="0,10,0,0" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

@@ -1,0 +1,78 @@
+<Window x:Class="MyLianPC.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="MyLianPC" Width="1280" Height="860" MinWidth="980" MinHeight="640"
+        Icon="Assets/app.png" WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource SolidBackgroundFillColorBaseBrush}">
+    <Grid x:Name="RootLayout">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="232" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Navigation -->
+        <Border Grid.Column="0" Background="{DynamicResource LayerFillColorDefaultBrush}"
+                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="0,0,1,0">
+            <DockPanel Margin="10,14,10,12">
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="8,0,0,18">
+                    <Image Source="Assets/app.png" Width="28" Height="28" />
+                    <TextBlock Text="MyLianPC" FontSize="18" FontWeight="SemiBold" Margin="10,0,0,0" VerticalAlignment="Center"
+                               Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                </StackPanel>
+
+                <StackPanel DockPanel.Dock="Bottom" Margin="8,8,4,0">
+                    <StackPanel Orientation="Horizontal">
+                        <Ellipse Width="8" Height="8" Margin="0,0,8,0" VerticalAlignment="Center">
+                            <Ellipse.Style>
+                                <Style TargetType="Ellipse">
+                                    <Setter Property="Fill" Value="#C42B1C" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ServiceConnected}" Value="True">
+                                            <Setter Property="Fill" Value="#1F9D55" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Ellipse.Style>
+                        </Ellipse>
+                        <TextBlock Text="{Binding ConnectionMessage}" Style="{StaticResource Caption}" MaxWidth="180" TextTrimming="CharacterEllipsis"
+                                   ToolTip="{Binding ConnectionMessage}" />
+                    </StackPanel>
+                    <TextBlock Style="{StaticResource Caption}" Margin="16,4,0,0">
+                        <Run Text="Profile:" /> <Run Text="{Binding Status.ActiveProfileName, FallbackValue='—', TargetNullValue='(none)'}" FontWeight="SemiBold" />
+                    </TextBlock>
+                </StackPanel>
+
+                <ListBox x:Name="Nav" BorderThickness="0" Background="Transparent" SelectionChanged="Nav_SelectionChanged">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" Margin="4,6">
+                                <TextBlock Text="{Binding Glyph}" FontFamily="{StaticResource IconFont}" FontSize="16" Width="26" VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding Title}" FontSize="14" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+        </Border>
+
+        <!-- Content -->
+        <DockPanel Grid.Column="1">
+            <Border DockPanel.Dock="Top" Style="{StaticResource Banner}" Margin="24,16,24,0"
+                    Visibility="{Binding ServiceConnected, Converter={StaticResource InverseBoolToVis}}">
+                <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorPrimaryBrush}">
+                    <Run Text="⚠ Not connected to the MyLianPC service." FontWeight="SemiBold" />
+                    <Run Text="{Binding ConnectionMessage}" />
+                    <Run Text="Hardware keeps its last settings. Go to Settings → Service to start it." />
+                </TextBlock>
+            </Border>
+            <ContentControl x:Name="Page" Margin="24,16,16,0" Focusable="False" />
+        </DockPanel>
+
+        <!-- Ctrl+Plus / Ctrl+Minus feedback -->
+        <Border x:Name="ZoomToast" Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,28,18"
+                Background="{DynamicResource SolidBackgroundFillColorBaseBrush}" BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1" CornerRadius="6" Padding="12,5" Opacity="0" IsHitTestVisible="False">
+            <TextBlock x:Name="ZoomToastText" Foreground="{DynamicResource TextFillColorPrimaryBrush}" FontWeight="SemiBold" />
+        </Border>
+    </Grid>
+</Window>
