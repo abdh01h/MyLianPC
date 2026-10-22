@@ -133,30 +133,28 @@ public partial class MainWindow : Window
         var dpi = System.Windows.Media.VisualTreeHelper.GetDpi(this);
         var content = (FrameworkElement)Content;
 
-        // Measure the page with unbounded height so a page taller than the window (the Cooler LCD
-        // page) is captured in full instead of being clipped at the window's bottom edge.
-        double targetHeight = content.ActualHeight;
-        if (Page.Content is FrameworkElement page && Page.ActualWidth > 0)
-        {
-            page.Measure(new Size(Page.ActualWidth, double.PositiveInfinity));
-            if (!double.IsInfinity(page.DesiredSize.Height) && page.DesiredSize.Height > targetHeight)
-                targetHeight = page.DesiredSize.Height + 40; // top and bottom margins around the content host
-        }
+        // A screenshot is a fixed reference image: capture it at 100% (the interface zoom is a layout transform on
+        // the root Grid and would otherwise be applied twice) and with a window big enough to show the whole page
+        // (the Cooler LCD page is taller than the default window).
+        var zoom = RootLayout.LayoutTransform;
+        RootLayout.LayoutTransform = null;
+        Width = Math.Max(Width, 1480);
+        Height = Math.Max(Height, 1000);
+        UpdateLayout();
 
-        content.Measure(new Size(content.ActualWidth, targetHeight));
-        content.Arrange(new Rect(0, 0, content.ActualWidth, targetHeight));
-
-        var rtb = new System.Windows.Media.Imaging.RenderTargetBitmap((int)(content.ActualWidth * dpi.DpiScaleX), (int)(targetHeight * dpi.DpiScaleY),
+        var rtb = new System.Windows.Media.Imaging.RenderTargetBitmap((int)(content.ActualWidth * dpi.DpiScaleX), (int)(content.ActualHeight * dpi.DpiScaleY),
             dpi.PixelsPerInchX, dpi.PixelsPerInchY, System.Windows.Media.PixelFormats.Pbgra32);
-        var bg = new System.Windows.Shapes.Rectangle { Width = content.ActualWidth, Height = targetHeight, Fill = Background ?? System.Windows.Media.Brushes.Black };
-        bg.Measure(new Size(content.ActualWidth, targetHeight));
-        bg.Arrange(new Rect(0, 0, content.ActualWidth, targetHeight));
+        var bg = new System.Windows.Shapes.Rectangle { Width = content.ActualWidth, Height = content.ActualHeight, Fill = Background ?? System.Windows.Media.Brushes.Black };
+        bg.Measure(new Size(content.ActualWidth, content.ActualHeight));
+        bg.Arrange(new Rect(0, 0, content.ActualWidth, content.ActualHeight));
         rtb.Render(bg);
         rtb.Render(content);
         var enc = new System.Windows.Media.Imaging.PngBitmapEncoder();
         enc.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(rtb));
         using var fs = File.Create(file);
         enc.Save(fs);
+
+        RootLayout.LayoutTransform = zoom;
     }
 
     public void CloseForReal()
