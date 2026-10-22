@@ -116,22 +116,36 @@ public sealed class HydroShiftAdapter : IDisposable
     public ApplyResult ApplyRing(ZoneLighting z)
     {
         var anim = EffectFrames.Generate(z, HydroShift2Protocol.RingLedCount);
-        int fans = Telemetry?.LightingFanCount is int n and >= 1 and <= 4 ? n : 0;
-        if (fans > 0)
-        {
-            var (fanFrames, fanInterval) = WithFans(anim, fans, lit: FanLighting);
-            if (Run(d => d.SetRing(fanFrames, fanInterval, retry: false), false))
-                return new(DeviceId, "Pump ring lighting", true, FanLighting
-                    ? $"{z.Effect} applied to the ring and {fans} radiator fans"
-                    : $"{z.Effect} applied to the ring; radiator fan LEDs off");
-            // Never retry fan lighting: an upload the firmware does not like could leave it needing a power cycle.
-            FanLighting = false;
-            _log($"HydroShift: fan lighting ({fans} fans) was not accepted; turned it off");
-            FanLightingRejected?.Invoke($"The cooler did not accept lighting for {fans} fans.");
-        }
         var frames = anim.Frames.Select(f => f.SelectMany(c => new[] { c.R, c.G, c.B }).ToArray()).ToList();
-        bool ok = Run(d => d.SetRing(frames, (byte)Math.Clamp(anim.FrameIntervalMs, 1, 255)), false);
-        return new(DeviceId, "Pump ring lighting", ok, ok ? $"{z.Effect} applied" : _error ?? "The cooler did not acknowledge the ring upload.");
+
+        // Always drive the pump ring with a ring-only upload first: the combined ring+fans upload is
+        // experimental and on some firmware only drives the radiator fans, so the ring must not depend on it.
+        bool ringOk = Run(d => d.SetRing(frames, (byte)Math.Clamp(anim.FrameIntervalMs, 1, 255)), false);
+        string ringError = _error ?? "The cooler did not acknowledge the ring upload.";
+
+        int fans = Telemetry?.LightingFanCount is int n and >= 1 and <= 4 ? n : 0;
+        if (fans == 0)
+            return new(DeviceId, "Pump ring lighting", ringOk, ringOk ? $"{z.Effect} applied" : ringError);
+
+        if (!FanLighting)
+        {
+            // Fan lighting is off: upload the ring plus black fan frames so the fan LEDs are switched off.
+            // The ring is already correct, so a fan-packet failure only leaves the fans as they were.
+            var (offFrames, offInterval) = WithFans(anim, fans, lit: false);
+            bool fansOff = Run(d => d.SetRing(offFrames, offInterval, retry: false), false);
+            return new(DeviceId, "Pump ring lighting", ringOk,
+                ringOk ? (fansOff ? $"{z.Effect} applied to the ring; radiator fan LEDs off" : $"{z.Effect} applied") : ringError);
+        }
+
+        var (fanFrames, fanInterval) = WithFans(anim, fans, lit: true);
+        if (Run(d => d.SetRing(fanFrames, fanInterval, retry: false), false))
+            return new(DeviceId, "Pump ring lighting", true, $"{z.Effect} applied to the ring and {fans} radiator fans");
+
+        // Never retry fan lighting: an upload the firmware does not like could leave it needing a power cycle.
+        FanLighting = false;
+        _log($"HydroShift: fan lighting ({fans} fans) was not accepted; turned it off");
+        FanLightingRejected?.Invoke($"The cooler did not accept lighting for {fans} fans.");
+        return new(DeviceId, "Pump ring lighting", ringOk, ringOk ? $"{z.Effect} applied" : ringError);
     }
 
     /// <summary>
