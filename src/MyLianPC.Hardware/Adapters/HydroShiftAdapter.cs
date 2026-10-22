@@ -127,6 +127,10 @@ public sealed class HydroShiftAdapter : IDisposable
         if (fans == 0)
             return new(DeviceId, "Pump ring lighting", ringOk, ringOk ? $"{z.Effect} applied" : ringError);
 
+        // The firmware acknowledges an upload on receipt but silently drops one that arrives while it is still
+        // switching to the previous animation, which left the fan LEDs on the old effect after a profile switch.
+        if (ringOk) Thread.Sleep(FanUploadDelay);
+
         if (!FanLighting)
         {
             // Fan lighting is off: upload the ring plus black fan frames so the fan LEDs are switched off.
@@ -147,6 +151,9 @@ public sealed class HydroShiftAdapter : IDisposable
         FanLightingRejected?.Invoke($"The cooler did not accept lighting for {fans} fans.");
         return new(DeviceId, "Pump ring lighting", ringOk, ringOk ? $"{z.Effect} applied" : ringError);
     }
+
+    /// <summary>Pause between the ring-only and the ring+fans upload; well above the longest frame interval (250 ms).</summary>
+    private static readonly TimeSpan FanUploadDelay = TimeSpan.FromMilliseconds(1500);
 
     /// <summary>
     /// Ring frames followed by the same 24 colors for every fan, or by black when the fan LEDs are turned off.

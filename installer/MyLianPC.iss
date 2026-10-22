@@ -1,6 +1,6 @@
 ; Inno Setup 6 script for MyLianPC. Built by build\publish.ps1 (passes AppVersion and SourceDir).
 #ifndef AppVersion
-  #define AppVersion "0.10.1-beta"
+  #define AppVersion "0.10.2-beta"
 #endif
 #ifndef SourceDir
   #define SourceDir "..\artifacts\MyLianPC"

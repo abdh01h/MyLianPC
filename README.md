@@ -1,6 +1,6 @@
 # MyLianPC
 
-[![version](https://img.shields.io/badge/version-0.10.1--beta-orange)](https://github.com/abdh01h/MyLianPC/releases)
+[![version](https://img.shields.io/badge/version-0.10.2--beta-orange)](https://github.com/abdh01h/MyLianPC/releases)
 [![platform](https://img.shields.io/badge/platform-Windows%2011%20x64-0078D6)](#requirements)
 [![.NET](https://img.shields.io/badge/.NET-10-512BD4)](#technology-stack)
 [![license](https://img.shields.io/badge/license-GPL--2.0--or--later-blue)](LICENSE)
@@ -71,7 +71,7 @@ its fans through motherboard PWM headers.
 
 ## Install
 
-1. Download `MyLianPC-Setup-0.10.1-beta.exe` (or the zip) from the [releases](https://github.com/abdh01h/MyLianPC/releases).
+1. Download `MyLianPC-Setup-0.10.2-beta.exe` (or the zip) from the [releases](https://github.com/abdh01h/MyLianPC/releases).
 2. Run it and approve the administrator prompt. Keep **Take over from vendor software** checked. This disables
    L-Connect 3's services, Corsair Device Control Service and GIGABYTE Control Center's sign-in task. Nothing is
    uninstalled, and **Settings → Vendor software → Restore** puts them back.
@@ -177,7 +177,7 @@ dotnet test                                                   # unit tests
 powershell -ExecutionPolicy Bypass -File build\publish.ps1    # artifacts\MyLianPC, zip, and setup .exe if Inno Setup 6 is installed
 ```
 
-The publish script reads the version from `src/MyLianPC.App/MyLianPC.App.csproj` (`0.10.1-beta`), so bumping that one
+The publish script reads the version from `src/MyLianPC.App/MyLianPC.App.csproj` (`0.10.2-beta`), so bumping that one
 property renames the zip and the setup executable.
 
 | Project | Role |
