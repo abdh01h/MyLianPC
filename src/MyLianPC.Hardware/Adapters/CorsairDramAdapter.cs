@@ -14,7 +14,7 @@ public sealed class CorsairDramAdapter : IDisposable
     public const string DeviceId = "corsair-dram";
 
     private static readonly LightingEffect[] Effects =
-        [LightingEffect.Off, LightingEffect.Static, LightingEffect.Gradient, LightingEffect.Breathing, LightingEffect.Flash, LightingEffect.ColorCycle, LightingEffect.Rainbow, LightingEffect.Wave];
+        [LightingEffect.Off, LightingEffect.Static, LightingEffect.Gradient, LightingEffect.Breathing, LightingEffect.Flash, LightingEffect.ColorCycle, LightingEffect.Rainbow, LightingEffect.RainbowWave, LightingEffect.Wave];
 
     private readonly object _gate = new();
     private readonly Action<string> _log;
@@ -233,6 +233,7 @@ public sealed class CorsairDramAdapter : IDisposable
         LightingEffect.Breathing or LightingEffect.Flash => m.SetEffect(CorsairDramMode.ColorPulse, speed, 0, false, bright, c1, c2),
         LightingEffect.ColorCycle => m.SetEffect(CorsairDramMode.ColorShift, speed, 0, z.Colors.Count < 2, bright, c1, c2),
         LightingEffect.Rainbow => m.SetEffect(CorsairDramMode.RainbowWave, speed, 1, false, 255, c1, c2),
+        LightingEffect.RainbowWave => m.SetEffect(CorsairDramMode.Rainbow, speed, 1, false, 255, c1, c2),
         LightingEffect.Wave => m.SetEffect(CorsairDramMode.ColorWave, speed, 1, false, bright, c1, c2),
         _ => throw new NotSupportedException($"{z.Effect} is not supported on Corsair DRAM."),
     };

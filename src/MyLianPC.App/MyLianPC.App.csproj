@@ -12,7 +12,7 @@
     <RootNamespace>MyLianPC.App</RootNamespace>
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <Version>0.10.2-beta</Version>
+    <Version>0.10.3-beta</Version>
     <Product>MyLianPC (beta)</Product>
     <!-- WPF Fluent theme / ThemeMode is marked experimental. -->
     <NoWarn>$(NoWarn);WPF0001</NoWarn>

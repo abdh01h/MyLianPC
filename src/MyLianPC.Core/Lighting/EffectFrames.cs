@@ -47,6 +47,14 @@ public static class EffectFrames
                     : Anim((f, _) => RgbColor.FromHsv(360.0 * f / MaxFrames));
             case LightingEffect.Rainbow:
                 return Anim((f, i) => RgbColor.FromHsv(360.0 * i / ledCount - 360.0 * f / MaxFrames));
+            case LightingEffect.RainbowWave:
+                // Fixed rainbow spread with a bright band sweeping along the strip (unlike Rainbow, the hue does not scroll).
+                return Anim((f, i) =>
+                {
+                    double phase = i / (double)ledCount - f / (double)MaxFrames;
+                    double level = 0.25 + 0.75 * (0.5 - 0.5 * Math.Cos(2 * Math.PI * phase));
+                    return RgbColor.FromHsv(360.0 * i / ledCount, 1, level);
+                });
             case LightingEffect.Wave:
                 return Anim((f, i) => SampleCyclic(colors.Count >= 2 ? colors : [colors[0], RgbColor.Black], (i / (double)ledCount + f / (double)MaxFrames) % 1));
             default:

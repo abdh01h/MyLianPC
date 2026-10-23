@@ -11,9 +11,9 @@ public sealed class Fusion2Adapter : IDisposable
     public const int DefaultHeaderLeds = 32;
 
     private static readonly LightingEffect[] HeaderEffects =
-        [LightingEffect.Off, LightingEffect.Static, LightingEffect.Breathing, LightingEffect.Flash, LightingEffect.ColorCycle, LightingEffect.Rainbow, LightingEffect.Wave, LightingEffect.Gradient];
+        [LightingEffect.Off, LightingEffect.Static, LightingEffect.Breathing, LightingEffect.Flash, LightingEffect.ColorCycle, LightingEffect.Rainbow, LightingEffect.RainbowWave, LightingEffect.Wave, LightingEffect.Gradient];
     private static readonly LightingEffect[] SingleEffects =
-        [LightingEffect.Off, LightingEffect.Static, LightingEffect.Breathing, LightingEffect.Flash, LightingEffect.ColorCycle, LightingEffect.Rainbow, LightingEffect.Wave, LightingEffect.Gradient];
+        [LightingEffect.Off, LightingEffect.Static, LightingEffect.Breathing, LightingEffect.Flash, LightingEffect.ColorCycle, LightingEffect.Rainbow, LightingEffect.RainbowWave, LightingEffect.Wave, LightingEffect.Gradient];
 
     private readonly object _gate = new();
     private readonly Action<string> _log;
@@ -113,7 +113,7 @@ public sealed class Fusion2Adapter : IDisposable
             Effects = z.Addressable ? HeaderEffects : SingleEffects,
             MaxColors = z.Addressable ? 6 : 1,
             LedCountConfigurable = z.Addressable,
-            Note = z.Addressable ? "Gradient, rainbow and wave are drawn per LED: set the LED count. They are re-applied at every start and are not stored in flash." : null,
+            Note = z.Addressable ? "Gradient, rainbow, rainbow wave and wave are drawn per LED: set the LED count. They are re-applied at every start and are not stored in flash." : null,
         }).ToList();
 
     /// <summary>Queues a zone change; call <see cref="Commit"/> once after all zones.</summary>
@@ -135,6 +135,7 @@ public sealed class Fusion2Adapter : IDisposable
                     case LightingEffect.Flash: _ctl!.SetEffect(zone, Fusion2Effect.Blinking, color, z.Brightness, z.Speed); break;
                     case LightingEffect.ColorCycle: _ctl!.SetEffect(zone, Fusion2Effect.ColorCycle, color, z.Brightness, z.Speed); break;
                     case LightingEffect.Rainbow when zone.Addressable:
+                    case LightingEffect.RainbowWave when zone.Addressable:
                     case LightingEffect.Wave when zone.Addressable:
                         // The controller has no per-LED rainbow or wave (its colour-cycle engine just steps one colour
                         // at a time), so these are streamed as per-LED frames in direct mode instead.
@@ -147,6 +148,7 @@ public sealed class Fusion2Adapter : IDisposable
                         _log($"Fusion2: {zone.Name} shows {z.Effect} per LED ({ledCount} LEDs, {anim.Frames.Count} frames every {interval} ms)");
                         break;
                     case LightingEffect.Rainbow:
+                    case LightingEffect.RainbowWave:
                     case LightingEffect.Wave:
                         // A single onboard LED has no room for a rainbow or a wave: the colour-cycle engine at least
                         // moves through the selected colours.

@@ -235,7 +235,10 @@ public sealed class HardwareManager : BackgroundService
             if (force && only is null or Fusion2Adapter.DeviceId) Motherboard.Reopen();
             if (only is null or Fusion2Adapter.DeviceId) Motherboard.BeginBatch();
             bool touchedFusion = false;
-            foreach (var zone in Zones.Where(z => only is null || z.DeviceId == only))
+            // The cooler waits for its animation engine before it can update the radiator-fan LEDs. Do it last so
+            // that wait never delays the motherboard headers or the RAM modules.
+            foreach (var zone in Zones.Where(z => only is null || z.DeviceId == only)
+                         .OrderBy(z => z.DeviceId == HydroShiftAdapter.DeviceId ? 1 : 0))
             {
                 if (p.Lighting.For(zone.Id) is not { } requested) continue;
                 var (lighting, substitute) = Fit(requested, zone);
@@ -266,6 +269,7 @@ public sealed class HardwareManager : BackgroundService
         {
             LightingEffect.Wave => [LightingEffect.Rainbow, LightingEffect.ColorCycle, LightingEffect.Static],
             LightingEffect.Rainbow => [LightingEffect.ColorCycle, LightingEffect.Static],
+            LightingEffect.RainbowWave => [LightingEffect.Rainbow, LightingEffect.ColorCycle, LightingEffect.Static],
             LightingEffect.Gradient => [LightingEffect.Static],
             LightingEffect.Flash => [LightingEffect.Breathing, LightingEffect.Static],
             _ => [LightingEffect.Static],

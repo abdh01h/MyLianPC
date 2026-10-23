@@ -16,7 +16,7 @@ public sealed class HydroShiftAdapter : IDisposable
 
     private static readonly LightingEffect[] RingEffects =
         [LightingEffect.Off, LightingEffect.Static, LightingEffect.Breathing, LightingEffect.Flash, LightingEffect.ColorCycle,
-         LightingEffect.Rainbow, LightingEffect.Wave, LightingEffect.Gradient];
+         LightingEffect.Rainbow, LightingEffect.RainbowWave, LightingEffect.Wave, LightingEffect.Gradient];
 
     private readonly object _gate = new();
     private readonly Action<string> _log;
@@ -129,7 +129,9 @@ public sealed class HydroShiftAdapter : IDisposable
 
         // The firmware acknowledges an upload on receipt but silently drops one that arrives while it is still
         // switching to the previous animation, which left the fan LEDs on the old effect after a profile switch.
-        if (ringOk) Thread.Sleep(FanUploadDelay);
+        // One frame is the switch itself; two frame intervals (500 ms floor) is enough for the animation engine to
+        // settle, and unlike the old fixed 1.5 s it does not keep the radiator-fan LEDs behind for over a second.
+        if (ringOk) Thread.Sleep(Math.Clamp(anim.FrameIntervalMs * 2, 500, 1000));
 
         if (!FanLighting)
         {
@@ -151,9 +153,6 @@ public sealed class HydroShiftAdapter : IDisposable
         FanLightingRejected?.Invoke($"The cooler did not accept lighting for {fans} fans.");
         return new(DeviceId, "Pump ring lighting", ringOk, ringOk ? $"{z.Effect} applied" : ringError);
     }
-
-    /// <summary>Pause between the ring-only and the ring+fans upload; well above the longest frame interval (250 ms).</summary>
-    private static readonly TimeSpan FanUploadDelay = TimeSpan.FromMilliseconds(1500);
 
     /// <summary>
     /// Ring frames followed by the same 24 colors for every fan, or by black when the fan LEDs are turned off.

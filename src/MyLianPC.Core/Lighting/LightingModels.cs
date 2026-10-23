@@ -11,6 +11,7 @@ public enum LightingEffect
     Breathing,
     ColorCycle,
     Rainbow,
+    RainbowWave,
     Wave,
     Gradient,
     Flash,
@@ -39,7 +40,7 @@ public sealed record ZoneLighting
         if (!caps.Effects.Contains(Effect)) problems.Add($"Effect '{Effect}' is not supported by this zone.");
         if (Brightness is < 0 or > 100) problems.Add("Brightness must be between 0 and 100.");
         if (Speed is < 0 or > 100) problems.Add("Speed must be between 0 and 100.");
-        if (Effect is not (LightingEffect.Off or LightingEffect.Rainbow) && Colors.Count == 0)
+        if (Effect is not (LightingEffect.Off or LightingEffect.Rainbow or LightingEffect.RainbowWave) && Colors.Count == 0)
             problems.Add("At least one color is required for this effect.");
         if (Colors.Count > caps.MaxColors) problems.Add($"This zone accepts at most {caps.MaxColors} color(s).");
         return problems;

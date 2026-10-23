@@ -78,7 +78,7 @@ public partial class LightingView : UserControl
         // Sync-all edits every zone at once: allow as many colors as the most capable zone takes; each device
         // trims the list to what it supports when the profile is applied.
         int maxColors = Math.Max(1, targetZones.Select(z => z.MaxColors).DefaultIfEmpty(1).Max());
-        bool usesColors = cur.Effect is not (LightingEffect.Off or LightingEffect.Rainbow);
+        bool usesColors = cur.Effect is not (LightingEffect.Off or LightingEffect.Rainbow or LightingEffect.RainbowWave);
         ColorSection.IsEnabled = usesColors;
         _selectedColor = Math.Clamp(_selectedColor, 0, Math.Max(0, cur.Colors.Count - 1));
         ColorChips.ItemsSource = cur.Colors.Select((c, i) => new Chip(i, new SolidColorBrush(c.ToMedia()), new Thickness(i == _selectedColor ? 3 : 1), c.ToHex())).ToList();

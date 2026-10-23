@@ -16,6 +16,7 @@ public class EffectFrameTests
     [InlineData(LightingEffect.Gradient, 1)]
     [InlineData(LightingEffect.Breathing, EffectFrames.MaxFrames)]
     [InlineData(LightingEffect.Rainbow, EffectFrames.MaxFrames)]
+    [InlineData(LightingEffect.RainbowWave, EffectFrames.MaxFrames)]
     [InlineData(LightingEffect.Wave, EffectFrames.MaxFrames)]
     [InlineData(LightingEffect.ColorCycle, EffectFrames.MaxFrames)]
     [InlineData(LightingEffect.Flash, EffectFrames.MaxFrames)]

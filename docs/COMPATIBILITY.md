@@ -200,9 +200,9 @@ Module layout (in this repo):
   general. The app uploads them together with the pump ring (Settings → Service → "Light the radiator fans with the
   pump ring"); with that option off their LEDs are switched off.
 * The IT5711's built-in "wave" effect is a whole-device sequence that overrides per-zone settings and it has no
-  per-LED rainbow at all, so on the ARGB headers Rainbow and Wave are drawn per LED in direct mode (the service
+  per-LED rainbow at all, so on the ARGB headers Rainbow, Rainbow Wave and Wave are drawn per LED in direct mode (the service
   streams the frames, like the pump ring); the single onboard LEDs use the controller's colour-cycle engine.
 * L-Connect 3 and MyLianPC cannot run at the same time.
 * RAM effect changes are written to module memory (flash). The app avoids rewriting identical settings.
-* Per-LED effects on motherboard headers (gradient, rainbow, wave) use direct mode, which is not stored in flash; the
+* Per-LED effects on motherboard headers (gradient, rainbow, rainbow wave, wave) use direct mode, which is not stored in flash; the
   service re-applies them at every start.
