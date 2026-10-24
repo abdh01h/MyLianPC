@@ -142,6 +142,14 @@ The user wants **only the latest version** kept. After every publish, before upl
 Each old zip is roughly 100 MB and each old setup roughly 74 MB; before this rule the folder held nine releases and
 1.5 GB. Never delete the publish folder or the current version's assets.
 
+### Installer follow-through
+
+Inno Setup copies the files a new build ships but **never deletes ones it stopped shipping**, so an upgrade leaves them
+behind (0.11.2 dropped the old LCD and Cooling screenshots and they stayed beside the new ones). When a release removes
+or renames a file under `{app}`, add an `[InstallDelete]` entry in `installer/MyLianPC.iss` for it or its folder.
+`[InstallDelete]` runs before `[Files]`, so deleting a whole folder and letting `createallsubdirs` put the current files
+back is safe. This also fixes machines that already upgraded only on the next install, not retroactively.
+
 Commit style from history: an imperative subject naming the user-visible change, a body explaining **why** (hardware
 behaviour, failure mode, trade-off), and the version bump mentioned in the commit.
 

@@ -45,6 +45,9 @@ Type: filesandordirs; Name: "{autopf}\MyPcRgb"
 Type: filesandordirs; Name: "{commonprograms}\MyPcRgb"
 Type: files; Name: "{commonprograms}\MyLianPC.lnk"
 Type: files; Name: "{autodesktop}\MyPcRgb.lnk"
+; Inno copies the new files but never removes ones a newer version stopped shipping: 0.11.2 dropped the old LCD and
+; Cooling screenshots and an upgrade kept them beside the new ones. Clear the folder before the copy recreates it.
+Type: filesandordirs; Name: "{app}\docs\images"
 
 [Icons]
 Name: "{group}\MyLianPC"; Filename: "{app}\MyLianPC.exe"
