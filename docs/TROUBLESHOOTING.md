@@ -54,6 +54,15 @@ pretending the module took the setting.
 Plain ARGB strips don't report their length. Set the LED count of the header on the Devices page. It matters only for
 the per-LED Gradient effect; hardware effects (static, breathing, rainbow…) work without it.
 
+## Case fans are noisy between 38 and 60 °C
+
+Motherboard fan headers stay on the BIOS Smart Fan curve until you opt in on the **Devices** page, so a BIOS curve that
+ramps through idle temperatures keeps the case fans audible there. Tick the chassis fan headers, save, then on the
+**Cooling** page each newly controlled header starts on the **Case fans** preset — about 20-25% up to 60 °C, ramping to
+100% by 85 °C. Press **Apply and save** to store it in the active profile. The app never commands a header below the
+Super I/O chip's own minimum (typically 20-30%), so if the fans are still audible at the floor, that is the hardware
+minimum rather than the curve.
+
 ## CPU temperature shows "—"
 
 PawnIO is not installed, or the service isn't running. Both show on the Dashboard banner and in Diagnostics.

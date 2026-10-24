@@ -41,11 +41,32 @@ public class FanCurveTests
         foreach (var src in Enum.GetValues<TemperatureSource>())
         {
             data.Add(CoolingPresets.Silent(src));
+            data.Add(CoolingPresets.CaseFans(src));
             data.Add(CoolingPresets.Balanced(src));
             data.Add(CoolingPresets.Performance(src));
             data.Add(CoolingPresets.Maximum(src));
         }
         return data;
+    }
+
+    [Theory]
+    [InlineData(38)]
+    [InlineData(45)]
+    [InlineData(50)]
+    [InlineData(55)]
+    [InlineData(60)]
+    public void Case_fans_stay_quiet_through_normal_load_temperatures(double temperature)
+    {
+        var duty = CoolingPresets.CaseFans(TemperatureSource.CpuPackage).Evaluate(temperature);
+        Assert.InRange(duty, 20, 25);
+    }
+
+    [Fact]
+    public void Case_fans_still_reach_full_speed_when_the_cpu_is_hot()
+    {
+        var curve = CoolingPresets.CaseFans(TemperatureSource.CpuPackage);
+        Assert.True(curve.Evaluate(75) > curve.Evaluate(60));
+        Assert.Equal(100, curve.Evaluate(FanCurve.CriticalTemperatureC));
     }
 
     [Fact]

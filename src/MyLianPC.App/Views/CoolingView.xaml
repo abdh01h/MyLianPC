@@ -43,6 +43,8 @@
                             <TextBlock x:Name="TargetTitle" Style="{StaticResource SectionTitle}" />
                             <WrapPanel Margin="0,0,0,10">
                                 <Button x:Name="PresetSilent" Content="Silent" Tag="silent" Click="Preset_Click" Margin="0,0,8,8" />
+                                <Button x:Name="PresetCase" Content="Case fans" Tag="case" Click="Preset_Click" Margin="0,0,8,8"
+                                        ToolTip="Quiet through 38-60 °C; ramps only once the CPU is hot." />
                                 <Button x:Name="PresetBalanced" Content="Balanced" Tag="balanced" Click="Preset_Click" Margin="0,0,8,8" />
                                 <Button x:Name="PresetPerformance" Content="Performance" Tag="performance" Click="Preset_Click" Margin="0,0,8,8" />
                                 <Button x:Name="PresetMaximum" Content="Maximum cooling" Tag="max" Click="Preset_Click" Margin="0,0,8,8" />

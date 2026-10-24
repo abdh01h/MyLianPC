@@ -94,6 +94,8 @@
 
                                 <StackPanel Visibility="{Binding HasFans, Converter={StaticResource BoolToVis}}" Margin="0,12,0,0">
                                     <TextBlock Text="Fans" FontWeight="SemiBold" Margin="0,0,0,4" />
+                                    <TextBlock Text="Ticking a header applies straight away: it follows the curve you choose on the Cooling page, and returns to BIOS control when the service stops."
+                                               Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,0,0,6" />
                                     <ItemsControl ItemsSource="{Binding Fans}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
@@ -107,6 +109,7 @@
                                                     <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
                                                     <TextBlock Grid.Column="1" Text="{Binding RpmText}" VerticalAlignment="Center" FontWeight="SemiBold" />
                                                     <CheckBox Grid.Column="2" Content="Let MyLianPC control" IsChecked="{Binding ControlEnabled}"
+                                                              Click="FanControl_Click"
                                                               Visibility="{Binding CanOptIn, Converter={StaticResource BoolToVis}}" />
                                                     <TextBlock Grid.Column="3" Text="{Binding Note}" Style="{StaticResource Caption}" Margin="12,0,0,0" VerticalAlignment="Center" />
                                                 </Grid>

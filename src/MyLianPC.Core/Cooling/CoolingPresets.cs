@@ -11,6 +11,19 @@ public static class CoolingPresets
             : [new(30, 25), new(50, 30), new(65, 45), new(75, 70), new(85, 100)],
     };
 
+    /// <summary>
+    /// Chassis fans: hold the hardware's lowest duty through normal idle and light-load temperatures (the audible
+    /// 38-60 °C band), then ramp quickly once the CPU is genuinely hot. Case airflow matters much less than the
+    /// cooler's own fans in that range, so spinning up there only adds noise.
+    /// </summary>
+    public static FanCurve CaseFans(TemperatureSource source) => new()
+    {
+        Source = source,
+        Points = source == TemperatureSource.Coolant
+            ? [new(25, 20), new(40, 25), new(45, 45), new(50, 70), new(54, 100)]
+            : [new(30, 20), new(60, 25), new(70, 40), new(80, 70), new(85, 100)],
+    };
+
     public static FanCurve Balanced(TemperatureSource source) => new()
     {
         Source = source,
@@ -39,7 +52,8 @@ public static class CoolingPresets
     /// <summary>Every preset with the name the UI shows, in the order the preset buttons are listed.</summary>
     public static IReadOnlyList<(string Name, Func<TemperatureSource, FanCurve> Make)> All =>
     [
-        ("Silent", Silent), ("Balanced", Balanced), ("Performance", Performance), ("Maximum cooling", Maximum),
+        ("Silent", Silent), ("Case fans", CaseFans), ("Balanced", Balanced), ("Performance", Performance),
+        ("Maximum cooling", Maximum),
     ];
 
     /// <summary>

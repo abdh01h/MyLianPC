@@ -23,7 +23,7 @@ public partial class DevicesView : UserControl
         public required string Id { get; init; }
         public required string Name { get; init; }
         public required bool CanOptIn { get; init; }
-        public string? Note { get; init; }
+        [ObservableProperty] private string? _note;
         [ObservableProperty] private string _rpmText = "";
         [ObservableProperty] private bool _controlEnabled;
     }
@@ -46,6 +46,7 @@ public partial class DevicesView : UserControl
 
     private readonly AppState _state = AppState.Current;
     private List<DeviceVm> _vms = [];
+    private bool _fanOptInConfirmed;
 
     public DevicesView()
     {
@@ -114,5 +115,40 @@ public partial class DevicesView : UserControl
         await AppState.TryAsync(c => c.ConfigureDevicesAsync(settings), "Saving device settings");
         await _state.RefreshStatusAsync();
         Build();
+    }
+
+    /// <summary>
+    /// Fan checkboxes are applied the moment they are ticked. Committing them only through the Save button meant
+    /// ticking a header and navigating to another page silently discarded the choice, because the page rebuilds
+    /// its list from the service on every load.
+    /// </summary>
+    private async void FanControl_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement { DataContext: FanVm fan } || _state.Status is not { } st) return;
+
+        var optIn = _vms.SelectMany(v => v.Fans).Where(f => f.CanOptIn && f.ControlEnabled).Select(f => f.Id).ToList();
+        bool enabling = fan.ControlEnabled && !st.DeviceSettings.ControlledMotherboardFans.Contains(fan.Id);
+        if (enabling && !_fanOptInConfirmed)
+        {
+            if (MessageBox.Show(Window.GetWindow(this)!,
+                    "MyLianPC will drive the motherboard fan headers you tick in software instead of the BIOS Smart Fan curve.\n\n" +
+                    "They follow the curves you set on the Cooling page (100% if a sensor fails) and go back to BIOS control when the service stops. Continue?",
+                    "Motherboard fan control", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+            {
+                fan.ControlEnabled = false;
+                return;
+            }
+            _fanOptInConfirmed = true;
+        }
+
+        var saved = await AppState.TryAsync(
+            c => c.ConfigureDevicesAsync(st.DeviceSettings with { ControlledMotherboardFans = optIn }),
+            "Saving fan control");
+        if (saved is null) { fan.ControlEnabled = !fan.ControlEnabled; return; }
+        // Adopt the status the service returned so leaving and re-entering the page before the 3 s status poll
+        // still shows the header as controlled.
+        _state.Status = saved;
+        fan.Note = fan.ControlEnabled ? null : "Monitoring only. BIOS Smart Fan controls this header.";
+        await _state.RefreshStatusAsync();
     }
 }

@@ -1,6 +1,6 @@
 # MyLianPC
 
-[![version](https://img.shields.io/badge/version-0.10.3--beta-orange)](https://github.com/abdh01h/MyLianPC/releases)
+[![version](https://img.shields.io/badge/version-0.10.5--beta-orange)](https://github.com/abdh01h/MyLianPC/releases)
 [![platform](https://img.shields.io/badge/platform-Windows%2011%20x64-0078D6)](#requirements)
 [![.NET](https://img.shields.io/badge/.NET-10-512BD4)](#technology-stack)
 [![license](https://img.shields.io/badge/license-GPL--2.0--or--later-blue)](LICENSE)
@@ -71,7 +71,7 @@ its fans through motherboard PWM headers.
 
 ## Install
 
-1. Download `MyLianPC-Setup-0.10.3-beta.exe` (or the zip) from the [releases](https://github.com/abdh01h/MyLianPC/releases).
+1. Download `MyLianPC-Setup-0.10.5-beta.exe` (or the zip) from the [releases](https://github.com/abdh01h/MyLianPC/releases).
 2. Run it and approve the administrator prompt. Keep **Take over from vendor software** checked. This disables
    L-Connect 3's services, Corsair Device Control Service and GIGABYTE Control Center's sign-in task. Nothing is
    uninstalled, and **Settings → Vendor software → Restore** puts them back.
@@ -100,7 +100,7 @@ restored to how it was before. Profiles in `C:\ProgramData\MyLianPC` are kept un
 |---|---|
 | Lighting | Motherboard ARGB headers (case strip and fans), chipset accent, LED_C, both RAM modules and the pump ring from one page. Same effect everywhere or per zone; static, breathing, flash, color cycle, rainbow, rainbow wave, wave, gradient (per device where supported); hex input, palette and saved colors, brightness, speed |
 | Cooler LCD | 20+ themes (minimal temps, system overview, gaming dashboard, circular gauges, cyberpunk, toxic HUD, synthwave HUD, ice HUD, ember HUD, dark neon, CPU & GPU monitor, image/GIF, minimal clock, analog clock, cooling focus, load bars, power draw, status list, diagonal split, multi-metric, custom layout with movable widgets); colors, fonts, text size, °C/°F, 12- or 24-hour clock, gauge style, metric selection, brightness, rotation, refresh rate, live preview |
-| Cooling | Pump and radiator-fan curves following CPU, GPU or coolant temperature; Silent/Balanced/Performance/Maximum presets, fixed speed, minimum speed, hysteresis; the preset saved in the active profile is highlighted ("In use: the Silent preset, saved in 'Work'"); validated curves with a 100% failsafe; optional control of motherboard fan headers |
+| Cooling | Pump and radiator-fan curves following CPU, GPU or coolant temperature; Silent, Case fans, Balanced, Performance and Maximum presets, fixed speed, minimum speed, hysteresis; the preset saved in the active profile is highlighted ("In use: the Silent preset, saved in 'Work'"); validated curves with a 100% failsafe; optional control of motherboard fan headers (chassis fans start on the quiet Case fans curve) |
 | Monitoring | CPU/GPU temperature, load, clock, power; memory usage, memory temperature, memory speed and whether EXPO/XMP is active; coolant; pump and fan RPM; storage health; gauges, one card per component with all of its readings, history charts |
 | Profiles | Gaming, Work, Silent, Night Mode, Custom RGB, Maximum Cooling examples; create, rename, duplicate, delete, import, export, activate; per-device apply report. One shared list for the PC; each Windows account remembers the profile it last activated, and signing in applies it |
 | Windows | Runs as a service from boot for **every Windows account**; re-asserts lighting after account switches; Dark, Light and System appearance (follows Windows live); tray icon; start with Windows can be turned on or off in the installer or in Settings (the service always starts either way) |
@@ -177,7 +177,7 @@ dotnet test                                                   # unit tests
 powershell -ExecutionPolicy Bypass -File build\publish.ps1    # artifacts\MyLianPC, zip, and setup .exe if Inno Setup 6 is installed
 ```
 
-The publish script reads the version from `src/MyLianPC.App/MyLianPC.App.csproj` (`0.10.3-beta`), so bumping that one
+The publish script reads the version from `src/MyLianPC.App/MyLianPC.App.csproj` (`0.10.5-beta`), so bumping that one
 property renames the zip and the setup executable.
 
 | Project | Role |

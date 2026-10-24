@@ -65,7 +65,8 @@ public partial class CoolingView : UserControl
         foreach (var f in mbFans.Where(f => f.ControlEnabled))
         {
             targets.Add(new(f.Id, f.Name, $"{f.Controller} · software control enabled", false));
-            _curves.TryAdd(f.Id, CoolingPresets.Balanced(TemperatureSource.CpuPackage));
+            // A newly opted-in chassis fan starts quiet: audible ramping is deferred past idle/light-load temperatures.
+            _curves.TryAdd(f.Id, CoolingPresets.CaseFans(TemperatureSource.CpuPackage));
         }
         var monitorOnly = mbFans.Where(f => !f.ControlEnabled).ToList();
         MonitorOnly.Text = monitorOnly.Count == 0 ? "" :
@@ -110,7 +111,7 @@ public partial class CoolingView : UserControl
     /// </summary>
     private void ShowPresetState()
     {
-        foreach (var button in new[] { PresetSilent, PresetBalanced, PresetPerformance, PresetMaximum })
+        foreach (var button in new[] { PresetSilent, PresetCase, PresetBalanced, PresetPerformance, PresetMaximum })
             button.ClearValue(StyleProperty);
 
         if (SelectedTarget is not { } t || !_curves.TryGetValue(t.Id, out var curve)) { PresetState.Text = string.Empty; return; }
@@ -127,6 +128,7 @@ public partial class CoolingView : UserControl
             var button = current switch
             {
                 "Silent" => PresetSilent,
+                "Case fans" => PresetCase,
                 "Performance" => PresetPerformance,
                 "Maximum cooling" => PresetMaximum,
                 _ => PresetBalanced,
@@ -200,6 +202,7 @@ public partial class CoolingView : UserControl
         Update(_ => (string)((FrameworkElement)sender).Tag switch
         {
             "silent" => CoolingPresets.Silent(src),
+            "case" => CoolingPresets.CaseFans(src),
             "performance" => CoolingPresets.Performance(src),
             "max" => CoolingPresets.Maximum(src),
             _ => CoolingPresets.Balanced(src),
@@ -209,8 +212,16 @@ public partial class CoolingView : UserControl
     private void Source_Changed(object sender, SelectionChangedEventArgs e)
     {
         if (_loading || SourceBox.SelectedItem is not SourceOption sel) return;
-        // Switching between coolant (20-60 °C) and CPU/GPU (20-100 °C) needs a curve made for that range.
-        Update(c => c.Source == sel.Source ? c : CoolingPresets.Balanced(sel.Source) with { MinimumDutyPercent = c.MinimumDutyPercent });
+        // Switching between coolant (20-60 °C) and CPU/GPU (20-100 °C) needs a curve made for that range. Keep the
+        // preset identity (Silent, Case fans, …) so a quiet curve stays quiet on the new source.
+        Update(c =>
+        {
+            if (c.Source == sel.Source) return c;
+            var current = CoolingPresets.NameOf(c);
+            var make = CoolingPresets.All.FirstOrDefault(p => p.Name == current).Make;
+            var next = make is not null ? make(sel.Source) : CoolingPresets.Balanced(sel.Source);
+            return next with { MinimumDutyPercent = c.MinimumDutyPercent };
+        });
     }
 
     private void Editor_CurveChanged(object? sender, EventArgs e) => Update(c => c with { Points = Editor.Points.ToList() });

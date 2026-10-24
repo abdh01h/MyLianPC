@@ -12,9 +12,11 @@ $root = Split-Path $PSScriptRoot -Parent
 $out = Join-Path $root 'artifacts\MyLianPC'
 $version = ([xml](Get-Content (Join-Path $root 'src\MyLianPC.App\MyLianPC.App.csproj'))).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
 
-$dotnet = (Get-Command dotnet -ErrorAction SilentlyContinue).Source
-if (-not $dotnet) { $dotnet = Join-Path $env:LOCALAPPDATA 'Microsoft\dotnet\dotnet.exe' }
-if (-not (Test-Path $dotnet)) { throw 'The .NET 10 SDK was not found. Install it from https://dot.net.' }
+# On this machine %ProgramFiles%\dotnet\dotnet.exe is on PATH but has no SDK; the real SDK lives in
+# %LOCALAPPDATA%\Microsoft\dotnet. Prefer a dotnet that can actually build, then fall back to PATH.
+$dotnet = Join-Path $env:LOCALAPPDATA 'Microsoft\dotnet\dotnet.exe'
+if (-not (Test-Path $dotnet)) { $dotnet = (Get-Command dotnet -ErrorAction SilentlyContinue).Source }
+if (-not $dotnet -or -not (Test-Path $dotnet)) { throw 'The .NET 10 SDK was not found. Install it from https://dot.net.' }
 $env:DOTNET_CLI_TELEMETRY_OPTOUT = '1'
 $env:DOTNET_ROOT = Split-Path $dotnet -Parent
 
