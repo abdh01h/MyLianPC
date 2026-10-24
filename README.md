@@ -19,11 +19,9 @@ real command, and anything the hardware cannot do is not offered.
 
 ## Screenshots
 
-| Dashboard — live readings | Lighting — one effect or per zone |
+| Dashboard — live readings, connection and traffic | Lighting — one effect or per zone |
 |---|---|
 | ![Dashboard](docs/images/dashboard.png) | ![Lighting](docs/images/lighting.png) |
-| **Cooler LCD — themes, gauges and image/GIF** | **Cooling — pump and radiator-fan curves** |
-| ![Cooler LCD](docs/images/lcd.png) | ![Cooling](docs/images/cooling.png) |
 
 ## What it is for
 
