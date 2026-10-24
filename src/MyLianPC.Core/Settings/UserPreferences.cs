@@ -20,7 +20,14 @@ public sealed record UserPreferences
     /// <summary>Interface scale set with Ctrl+Plus / Ctrl+Minus; kept inside the range the layout is designed for.</summary>
     public double UiScale { get; init; } = 1.0;
     public const double MinUiScale = 0.8, MaxUiScale = 1.4;
-    public IReadOnlyList<string> DashboardMetrics { get; init; } = Sensors.Metrics.All.Select(m => m.Key).ToList();
+    public IReadOnlyList<string> DashboardMetrics { get; init; } = DefaultDashboardMetrics();
+
+    /// <summary>
+    /// The readings a new account sees. The cooler card is off on purpose: the pump and radiator fans have their
+    /// own Cooling page, so the dashboard is CPU, GPU, memory, storage and the connection.
+    /// </summary>
+    public static IReadOnlyList<string> DefaultDashboardMetrics() =>
+        Sensors.Metrics.All.Where(m => m.Group != "Cooler").Select(m => m.Key).ToList();
     public IReadOnlyList<Lighting.RgbColor> SavedColors { get; init; } = [];
     /// <summary>True once this account was asked about turning off Windows Dynamic Lighting for the motherboard.</summary>
     public bool DynamicLightingPromptShown { get; init; }
@@ -77,6 +84,16 @@ public sealed record UserPreferences
             {
                 PreferencesVersion = 4,
                 DashboardMetrics = [.. Sensors.Metrics.All.Select(m => m.Key)],
+            };
+        // Version 5 keeps the cooler card off by default (the Cooling page owns the pump and fans) and adds the GPU
+        // memory readings. Only the cooler readings are removed, so a selection made in the customize popup survives.
+        if (result.PreferencesVersion is null or < 5)
+            result = result with
+            {
+                PreferencesVersion = 5,
+                DashboardMetrics = [.. result.DashboardMetrics
+                    .Where(k => Sensors.Metrics.Find(k)?.Group != "Cooler")
+                    .Union([Sensors.Metrics.GpuVramTotal, Sensors.Metrics.GpuVramUsed, Sensors.Metrics.GpuVramFree])],
             };
         return result;
     }

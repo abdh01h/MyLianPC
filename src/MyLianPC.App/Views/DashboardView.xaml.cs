@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using MyLianPC.App.Controls;
 using MyLianPC.App.Services;
 using MyLianPC.Core.Devices;
+using MyLianPC.Core.Network;
 using MyLianPC.Core.Profiles;
 using MyLianPC.Core.Sensors;
 using MyLianPC.Core.Settings;
@@ -55,6 +56,15 @@ public partial class DashboardView : UserControl
         [ObservableProperty] private string _text = "";
     }
 
+    /// <summary>One cell of the connection card: a label, its value and a quiet note underneath.</summary>
+    public sealed partial class TileVm : ObservableObject
+    {
+        [ObservableProperty] private string _label = "";
+        [ObservableProperty] private string _value = "—";
+        [ObservableProperty] private string? _detail;
+        [ObservableProperty] private string _tooltip = "";
+    }
+
     /// <summary>All readings of one component in the customize list, with a checkbox that selects them together.</summary>
     public sealed partial class MetricGroup : ObservableObject
     {
@@ -87,13 +97,18 @@ public partial class DashboardView : UserControl
         ["Memory"] = Color.FromRgb(0x40, 0xB0, 0x60),
         ["Cooler"] = Color.FromRgb(0x2D, 0x8C, 0xFF),
         ["Storage"] = Color.FromRgb(0xFF, 0xB0, 0x20),
+        ["Connection"] = Color.FromRgb(0x4C, 0xC2, 0xFF),
     };
+
+    private static readonly Color DownloadColor = Color.FromRgb(0x2D, 0x8C, 0xFF);
+    private static readonly Color UploadColor = Color.FromRgb(0xE0, 0xA0, 0x00);
 
     /// <summary>Frozen brushes for the card accents and the legend dots, created once instead of per refresh.</summary>
     private static readonly IReadOnlyDictionary<string, SolidColorBrush> GroupBrushes =
         GroupColors.ToDictionary(kv => kv.Key, kv => Freeze(new SolidColorBrush(kv.Value)));
 
-    private static readonly string[] GroupOrder = ["CPU", "GPU", "Memory", "Storage", "Cooler"];
+    /// <summary>The component cards, in the order they are read. The connection card spans the page separately.</summary>
+    private static readonly string[] CardGroups = ["CPU", "GPU", "Memory", "Storage", "Cooler"];
 
     /// <summary>Empty series for a metric that has no samples yet.</summary>
     private static readonly MetricHistory NoHistory = new(1);
@@ -116,7 +131,17 @@ public partial class DashboardView : UserControl
     private List<MetricGroup> _metricGroups = [];
     private readonly ObservableCollection<CardVm> _cardSource = [];
     private List<CardVm> _cards = [];
-    private readonly LegendVm _tempCpu, _tempGpu, _tempCoolant, _loadCpu, _loadGpu, _loadMemory;
+    private readonly LegendVm _tempCpu, _tempGpu, _tempCoolant, _loadCpu, _loadGpu, _loadMemory, _netDown, _netUp;
+    private readonly List<TileVm> _connectionTiles =
+    [
+        new() { Label = "Network" }, new() { Label = "Status" }, new() { Label = "Signal" }, new() { Label = "Link speed" },
+        new() { Label = "IPv4" }, new() { Label = "IPv6" }, new() { Label = "Gateway" }, new() { Label = "DNS" },
+    ];
+    private readonly List<TileVm> _trafficTiles =
+    [
+        new() { Label = "Download now" }, new() { Label = "Upload now" },
+        new() { Label = "Downloaded today" }, new() { Label = "Uploaded today" },
+    ];
 
     public DashboardView()
     {
@@ -127,14 +152,19 @@ public partial class DashboardView : UserControl
         Loaded += (_, _) => { RefreshProfiles(); Refresh(); };
         // The cards and legends are created once and then only their text changes, so the page is not rebuilt per sample.
         Cards.ItemsSource = _cardSource;
+        ConnectionTiles.ItemsSource = _connectionTiles;
+        TrafficTiles.ItemsSource = _trafficTiles;
         _tempCpu = new LegendVm { Brush = GroupBrushes["CPU"] };
         _tempGpu = new LegendVm { Brush = GroupBrushes["GPU"] };
         _tempCoolant = new LegendVm { Brush = GroupBrushes["Cooler"] };
         _loadCpu = new LegendVm { Brush = GroupBrushes["CPU"] };
         _loadGpu = new LegendVm { Brush = GroupBrushes["GPU"] };
         _loadMemory = new LegendVm { Brush = GroupBrushes["Memory"] };
+        _netDown = new LegendVm { Brush = Freeze(new SolidColorBrush(DownloadColor)) };
+        _netUp = new LegendVm { Brush = Freeze(new SolidColorBrush(UploadColor)) };
         TempLegend.ItemsSource = new[] { _tempCpu, _tempGpu, _tempCoolant };
         LoadLegend.ItemsSource = new[] { _loadCpu, _loadGpu, _loadMemory };
+        NetworkLegend.ItemsSource = new[] { _netDown, _netUp };
         // Hidden pages (another tab is open, or the window is in the tray) do not need to be redrawn.
         IsVisibleChanged += (_, _) => { if (IsVisible) Refresh(); };
     }
@@ -185,6 +215,7 @@ public partial class DashboardView : UserControl
         G(GRam, Metrics.RamLoad);
 
         UpdateCards(s, unit);
+        RefreshConnection();
 
         // Fahrenheit is applied while drawing (scale/offset) so no converted copy of the history is made per sample.
         bool fahrenheit = unit == TemperatureUnit.Fahrenheit;
@@ -207,6 +238,15 @@ public partial class DashboardView : UserControl
         _loadCpu.Text = $"CPU {LcdRenderer.Format(Metrics.CpuLoad, s[Metrics.CpuLoad], unit)}";
         _loadGpu.Text = $"GPU {LcdRenderer.Format(Metrics.GpuLoad, s[Metrics.GpuLoad], unit)}";
         _loadMemory.Text = $"Memory {LcdRenderer.Format(Metrics.RamLoad, s[Metrics.RamLoad], unit)}";
+
+        var n = _state.Network;
+        NetworkChart.SetSeries(
+        [
+            new("Download", DownloadColor, _state.DownloadHistory),
+            new("Upload", UploadColor, _state.UploadHistory),
+        ]);
+        _netDown.Text = $"Download {NetworkText.Rate(n.DownloadBytesPerSecond)}";
+        _netUp.Text = $"Upload {NetworkText.Rate(n.UploadBytesPerSecond)}";
     }
 
     private MetricHistory History(string key) => _state.History.TryGetValue(key, out var h) ? h : NoHistory;
@@ -219,16 +259,17 @@ public partial class DashboardView : UserControl
     {
         var selected = _state.Preferences.DashboardMetrics.ToHashSet();
         var cards = new List<(string Group, string? Spec, List<RowData> Rows)>();
-        foreach (var group in GroupOrder)
+        foreach (var group in CardGroups)
         {
             var rows = group == "Storage"
                 ? StorageRows(s, selected, unit)
                 : Metrics.All
-                    .Where(i => i.Group == group && selected.Contains(i.Key))
+                    .Where(i => i.Group == group && selected.Contains(i.Key) && !ShownWithName(i))
                     .Select(i => new RowData(ShortLabel(i), LcdRenderer.Format(i.Key, s[i.Key], unit)))
                     .ToList();
+            if (group == "Memory" && rows.Count > 0) AddAvailableMemory(rows, s);
             if (rows.Count == 0) continue;
-            cards.Add((group, Spec(s, group), rows));
+            cards.Add((group, Spec(group), rows));
         }
 
         if (_cards.Count != cards.Count || !_cards.Select(c => c.Group).SequenceEqual(cards.Select(c => c.Group)))
@@ -248,15 +289,103 @@ public partial class DashboardView : UserControl
         }
     }
 
-    private static string? Spec(SensorSnapshot s, string group) => group switch
+    private string? Spec(string group)
     {
-        "CPU" => s.Names.Cpu,
-        "GPU" => s.Names.Gpu,
-        "Memory" => s.Names.Memory,
-        "Storage" => s.Names.Storage,
-        "Cooler" => s.Names.Cooler,
-        _ => null,
-    };
+        var names = _state.Sensors.Names;
+        return group switch
+        {
+            "CPU" => names.Cpu,
+            "GPU" => GpuSpec(names.Gpu),
+            "Memory" => names.Memory,
+            "Storage" => names.Storage,
+            "Cooler" => names.Cooler,
+            _ => null,
+        };
+    }
+
+    /// <summary>
+    /// The GPU name with its memory size ("NVIDIA GeForce RTX 5060 Ti · 16 GB"). The total is how the card is
+    /// equipped, not a live reading, so it belongs on the name line rather than in a row of its own; it still
+    /// follows the "VRAM total" choice in Customize.
+    /// </summary>
+    private string? GpuSpec(string? name)
+    {
+        if (!_state.Preferences.DashboardMetrics.Contains(Metrics.GpuVramTotal)) return name;
+        if (_state.Sensors[Metrics.GpuVramTotal] is not { } total) return name;
+        // Whole gigabytes: the reported total is the usable size (16303 MB), and nobody calls that card a 15.9 GB one.
+        var size = $"{Math.Round(total):0} GB";
+        return string.IsNullOrWhiteSpace(name) ? size : $"{name} · {size}";
+    }
+
+    /// <summary>Readings that are folded into their card's name line instead of getting a row.</summary>
+    private static bool ShownWithName(Metrics.Info info) => info.Key == Metrics.GpuVramTotal;
+
+    /// <summary>
+    /// Fills the connection card: the link itself as a row of cells (network, status, signal, addresses) and the
+    /// traffic counters underneath as four large numbers. Cells are fixed, so the grid stays even and a value that is
+    /// not known reads "—" instead of leaving a hole. Hidden entirely when the service does not expose network
+    /// information (an older service still running after an app update).
+    /// </summary>
+    private void RefreshConnection()
+    {
+        var n = _state.Network;
+        ConnectionCard.Visibility = n.Available ? Visibility.Visible : Visibility.Collapsed;
+        if (!n.Available) return;
+
+        ConnectionSpec.Text = n.AdapterDescription ?? "";
+        ConnectionSpec.Visibility = string.IsNullOrWhiteSpace(n.AdapterDescription) ? Visibility.Collapsed : Visibility.Visible;
+
+        bool connected = n.Connected;
+        string signal = "—";
+        string? signalDetail = null;
+        if (connected) signal = SignalText(n, out signalDetail);
+        Set(_connectionTiles[0], n.IsWireless ? "Wi-Fi network" : "Network",
+            connected ? (n.IsWireless ? n.NetworkName ?? "—" : "Ethernet") : "Disconnected", null, n.NetworkName);
+        Set(_connectionTiles[1], "Status", connected ? n.Connectivity ?? "Connected" : "Disconnected", null, null);
+        Set(_connectionTiles[2], "Signal", signal, signalDetail,
+            connected && n.SignalPercent is null
+                ? "Windows does not report the Wi-Fi signal quality to the background service (location access is off)."
+                : null);
+        Set(_connectionTiles[3], "Link speed", connected ? NetworkText.LinkSpeed(n.LinkSpeedBitsPerSecond) : "—", null, null);
+        Address(_connectionTiles[4], "IPv4", n.IPv4Addresses);
+        Address(_connectionTiles[5], "IPv6", n.IPv6Addresses);
+        Set(_connectionTiles[6], "Gateway", n.Gateway ?? "—", null, null);
+        Address(_connectionTiles[7], "DNS", n.DnsServers);
+
+        Set(_trafficTiles[0], "Download now", NetworkText.Rate(n.DownloadBytesPerSecond), "live rate", null);
+        Set(_trafficTiles[1], "Upload now", NetworkText.Rate(n.UploadBytesPerSecond), "live rate", null);
+        Set(_trafficTiles[2], "Downloaded today", NetworkText.TodayBytes(n.DownloadBytesToday), "since midnight", null);
+        Set(_trafficTiles[3], "Uploaded today", NetworkText.TodayBytes(n.UploadBytesToday), "since midnight", null);
+    }
+
+    /// <summary>"85%", with the band and channel underneath when the adapter reports them.</summary>
+    private static string SignalText(NetworkSnapshot n, out string? detail)
+    {
+        if (n.SignalPercent is not { } signal)
+        {
+            // Windows only hands the signal out through the WLAN API, which it refuses without location access.
+            detail = n.IsWireless ? "not shared by Windows" : null;
+            return "—";
+        }
+        detail = n.Band is null ? null : n.Channel is { } channel ? $"{n.Band} · channel {channel}" : n.Band;
+        return $"{signal:0}%";
+    }
+
+    /// <summary>An address cell: the first address, with the rest (and the full list) behind a note and the tooltip.</summary>
+    private static void Address(TileVm tile, string label, IReadOnlyList<string> addresses)
+    {
+        Set(tile, label, addresses.Count == 0 ? "Not assigned" : addresses[0],
+            addresses.Count > 1 ? $"+{addresses.Count - 1} more" : null,
+            addresses.Count > 1 ? string.Join("\n", addresses) : null);
+    }
+
+    private static void Set(TileVm tile, string label, string value, string? detail, string? tooltip)
+    {
+        tile.Label = label;
+        tile.Value = value;
+        tile.Detail = detail;
+        tile.Tooltip = string.IsNullOrWhiteSpace(tooltip) ? value : tooltip;
+    }
 
     /// <summary>
     /// One row per drive: the size (and drive letters) on the left with the free space underneath, and the
@@ -275,6 +404,19 @@ public partial class DashboardView : UserControl
             string? detail = d.FreeBytes is { } free && d.TotalBytes is > 0 ? $"{Sizes.Capacity(free)} free" : null;
             return new RowData(label, $"{temperature} · {health}", detail, d.Name);
         }).ToList();
+    }
+
+    /// <summary>
+    /// Adds the memory still free under "Used". The service reports used and total, not free, but free is the number
+    /// people look for first. Kept next to "Used" whatever metric order the account has chosen.
+    /// </summary>
+    private static void AddAvailableMemory(List<RowData> rows, SensorSnapshot s)
+    {
+        if (s[Metrics.RamUsedGb] is not { } used || s[Metrics.RamTotalGb] is not { } total || total <= 0) return;
+        double free = Math.Max(0, total - used);
+        var row = new RowData("Available", $"{free:0.#} GB", $"{total:0.#} GB total");
+        int at = rows.FindIndex(r => r.Label == "Used");
+        rows.Insert(at >= 0 ? at + 1 : 0, row);
     }
 
     /// <summary>Drops the component name from a label inside its own card ("Memory usage" → "Usage").</summary>
@@ -309,7 +451,9 @@ public partial class DashboardView : UserControl
                 Items = g.Select(m => new MetricChoice
                 {
                     Key = m.Key,
-                    Label = string.IsNullOrEmpty(m.Unit) ? m.Label : $"{m.Label} ({m.Unit})",
+                    Label = m.Key == Metrics.GpuVramTotal
+                        ? "VRAM total (with the GPU name)"
+                        : string.IsNullOrEmpty(m.Unit) ? m.Label : $"{m.Label} ({m.Unit})",
                     Group = m.Group,
                     Selected = selected.Contains(m.Key),
                 }).ToList(),

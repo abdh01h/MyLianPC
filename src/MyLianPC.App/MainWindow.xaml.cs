@@ -23,12 +23,14 @@ public partial class MainWindow : Window
     [
         new("", "Dashboard", () => new DashboardView()),
         new("", "Devices", () => new DevicesView()),
+        new("", "Drivers", () => new DriversView()),
         new("", "Lighting", () => new LightingView()),
         new("", "Cooler LCD", () => new LcdView()),
         new("", "Cooling", () => new CoolingView()),
         new("", "Profiles", () => new ProfilesView()),
         new("", "Diagnostics", () => new DiagnosticsView()),
         new("", "Settings", () => new SettingsView()),
+        new("", "About", () => new AboutView()),
     ];
 
     private bool _reallyClose;
@@ -46,6 +48,41 @@ public partial class MainWindow : Window
         ApplyZoom(AppState.Current.Preferences.UiScale, showToast: false);
         IsVisibleChanged += (_, _) => UpdatePolling();
         StateChanged += (_, _) => UpdatePolling();
+        // Live values (addresses, driver versions, paths) are often wanted elsewhere. TextBlock cannot be
+        // selected, so a right click on any of them offers Copy.
+        AddHandler(PreviewMouseRightButtonDownEvent, new System.Windows.Input.MouseButtonEventHandler(PreviewRightClick), true);
+    }
+
+    private void PreviewRightClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        var block = TextBlockAt(e.OriginalSource);
+        if (block is null || string.IsNullOrWhiteSpace(block.Text)) return;
+        var copy = new MenuItem { Header = "Copy" };
+        copy.Click += (_, _) => CopyText(block.Text);
+        var menu = new ContextMenu { PlacementTarget = block, Items = { copy } };
+        menu.IsOpen = true;
+        e.Handled = true;
+    }
+
+    /// <summary>The TextBlock under the pointer. Text boxes keep their own, richer context menu.</summary>
+    private static TextBlock? TextBlockAt(object? source)
+    {
+        DependencyObject? current = source as DependencyObject;
+        while (current is not null)
+        {
+            if (current is TextBlock block) return block;
+            if (current is System.Windows.Controls.Primitives.TextBoxBase or ComboBox) return null;
+            current = current is Visual or System.Windows.Media.Media3D.Visual3D
+                ? VisualTreeHelper.GetParent(current)
+                : LogicalTreeHelper.GetParent(current);
+        }
+        return null;
+    }
+
+    private static void CopyText(string text)
+    {
+        try { Clipboard.SetText(text); }
+        catch (System.Runtime.InteropServices.ExternalException) { }
     }
 
     /// <summary>

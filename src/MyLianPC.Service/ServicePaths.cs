@@ -11,6 +11,7 @@ public static class ServicePaths
     public static string Profiles => Path.Combine(Root, "profiles.json");
     public static string Devices => Path.Combine(Root, "devices.json");
     public static string VendorState => Path.Combine(Root, "vendor-state.json");
+    public static string Network => Path.Combine(Root, "network.json");
     public static string Media => Path.Combine(Root, "media");
     public static string Logs => Path.Combine(Root, "logs");
 

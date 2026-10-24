@@ -14,7 +14,7 @@ using MyLianPC.Lcd;
 namespace MyLianPC.Service;
 
 /// <summary>
-/// The single owner of all hardware. Runs four loops: sensors, cooling, LCD and device watch.
+/// The single owner of all hardware. Runs the sensor, network, cooling, lighting, LCD and device-watch loops.
 /// Everything that changes hardware goes through this class, so no two code paths ever issue
 /// contradictory commands.
 /// </summary>
@@ -36,6 +36,7 @@ public sealed class HardwareManager : BackgroundService
     public Fusion2Adapter Motherboard { get; }
     public CorsairDramAdapter Ram { get; }
     public SensorHub Sensors { get; } = new();
+    public NetworkMonitor Network { get; } = new();
     public DateTimeOffset StartedUtc { get; } = DateTimeOffset.UtcNow;
     public ApplyReport? LastApply { get; private set; }
     public DeviceSettings Settings => _settings;
@@ -69,6 +70,7 @@ public sealed class HardwareManager : BackgroundService
 
         await Task.WhenAll(
             Loop("sensors", SensorTick, () => _settings.SensorIntervalMs, stop),
+            Loop("network", Network.Tick, () => 1000, stop),
             Loop("cooling", CoolingTick, () => 2000, stop),
             Loop("watch", WatchTick, () => 5000, stop),
             Loop("lighting", Motherboard.RenderAnimations, Motherboard.NextAnimationDelayMs, stop),
@@ -79,6 +81,7 @@ public sealed class HardwareManager : BackgroundService
     {
         await base.StopAsync(cancellationToken);
         _log.LogInformation("Service stopping: handing cooling back to safe fixed values and BIOS control");
+        try { Network.Save(force: true); } catch (Exception e) { _log.LogWarning(e, "Saving network totals failed"); }
         try { Cooler.SafeDefaults(); } catch (Exception e) { _log.LogWarning(e, "Cooler safe defaults failed"); }
         try { Sensors.ReleaseAllFans(); } catch (Exception e) { _log.LogWarning(e, "Releasing motherboard fans failed"); }
         Cooler.Dispose();

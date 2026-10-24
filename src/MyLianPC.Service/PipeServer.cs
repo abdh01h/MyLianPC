@@ -161,6 +161,7 @@ public sealed class PipeServer(HardwareManager hw, VendorManager vendor, Diagnos
         {
             case Methods.Status: return R(hw.Status());
             case Methods.Sensors: return R(hw.Snapshot);
+            case Methods.Network: return R(hw.Network.Current);
             case Methods.ProfilesList: return R(hw.Profiles.Snapshot);
             case Methods.ProfileSave:
             {

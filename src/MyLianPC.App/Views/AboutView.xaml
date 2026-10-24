@@ -1,0 +1,125 @@
+<UserControl x:Class="MyLianPC.App.Views.AboutView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,8,16">
+        <StackPanel MaxWidth="900" HorizontalAlignment="Left">
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,18">
+                <Image Source="/Assets/app.png" Width="72" Height="72" VerticalAlignment="Top" />
+                <StackPanel Margin="16,2,0,0" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="MyLianPC" FontSize="28" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                        <Border Style="{StaticResource Badge}" Background="{DynamicResource ControlFillColorSecondaryBrush}" Margin="10,0,0,0" Padding="8,2">
+                            <TextBlock x:Name="VersionBadge" FontSize="12" Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                        </Border>
+                    </StackPanel>
+                    <TextBlock Text="Unified lighting, cooler LCD, cooling and monitoring for this PC."
+                               Style="{StaticResource Caption}" FontSize="13" Margin="0,4,0,0" />
+                </StackPanel>
+            </StackPanel>
+
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock Text="Application" Style="{StaticResource SectionTitle}" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="170" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="Version" Style="{StaticResource Caption}" Margin="0,4" />
+                        <TextBlock x:Name="AppVersion" Grid.Column="1" Margin="0,4" Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                        <TextBlock Text="Build" Grid.Row="1" Style="{StaticResource Caption}" Margin="0,4" />
+                        <TextBlock x:Name="BuildDate" Grid.Row="1" Grid.Column="1" Margin="0,4" Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                        <TextBlock Text="Runtime" Grid.Row="2" Style="{StaticResource Caption}" Margin="0,4" />
+                        <TextBlock x:Name="RuntimeText" Grid.Row="2" Grid.Column="1" Margin="0,4" TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                        <TextBlock Text="Install folder" Grid.Row="3" Style="{StaticResource Caption}" Margin="0,4" />
+                        <TextBlock x:Name="InstallFolder" Grid.Row="3" Grid.Column="1" Margin="0,4" TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                    </Grid>
+                    <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                        <Button Content="Open install folder" Click="Install_Click" Margin="0,0,8,0" />
+                        <Button Content="Licenses and third-party notices" Click="Licenses_Click" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock Text="Service and data" Style="{StaticResource SectionTitle}" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="170" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="MyLianPC service" Style="{StaticResource Caption}" Margin="0,4" />
+                        <TextBlock x:Name="ServiceValue" Grid.Column="1" Margin="0,4" TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                        <TextBlock Text="Shared data" Grid.Row="1" Style="{StaticResource Caption}" Margin="0,4" />
+                        <TextBlock x:Name="DataFolder" Grid.Row="1" Grid.Column="1" Margin="0,4" TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                        <TextBlock Text="Logs" Grid.Row="2" Style="{StaticResource Caption}" Margin="0,4" />
+                        <TextBlock x:Name="LogFolder" Grid.Row="2" Grid.Column="1" Margin="0,4" TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                    </Grid>
+                    <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                        <Button Content="Open data folder" Click="Data_Click" Margin="0,0,8,0" />
+                        <Button Content="Open log folder" Click="Logs_Click" />
+                    </StackPanel>
+                    <TextBlock Style="{StaticResource Caption}" Margin="0,10,0,0"
+                               Text="The service owns every hardware write. This window only talks to it over a local named pipe, so closing MyLianPC leaves lighting, the LCD and the fan curves running." />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock Text="This PC" Style="{StaticResource SectionTitle}" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="170" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="Processor" Style="{StaticResource Caption}" Margin="0,4" />
+                        <TextBlock x:Name="CpuName" Grid.Column="1" Margin="0,4" TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                        <TextBlock Text="Graphics" Grid.Row="1" Style="{StaticResource Caption}" Margin="0,4" />
+                        <TextBlock x:Name="GpuName" Grid.Row="1" Grid.Column="1" Margin="0,4" TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                        <TextBlock Text="Memory" Grid.Row="2" Style="{StaticResource Caption}" Margin="0,4" />
+                        <TextBlock x:Name="MemoryName" Grid.Row="2" Grid.Column="1" Margin="0,4" TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                        <TextBlock Text="Storage" Grid.Row="3" Style="{StaticResource Caption}" Margin="0,4" />
+                        <TextBlock x:Name="StorageName" Grid.Row="3" Grid.Column="1" Margin="0,4" TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                        <TextBlock Text="Cooler" Grid.Row="4" Style="{StaticResource Caption}" Margin="0,4" />
+                        <TextBlock x:Name="CoolerName" Grid.Row="4" Grid.Column="1" Margin="0,4" TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                        <TextBlock Text="Windows" Grid.Row="5" Style="{StaticResource Caption}" Margin="0,4" />
+                        <TextBlock x:Name="WindowsText" Grid.Row="5" Grid.Column="1" Margin="0,4" TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock Text="Project" Style="{StaticResource SectionTitle}" />
+                    <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                               Text="MyLianPC is free and open source under the GNU General Public License, version 2 or later. It is not affiliated with, endorsed by or supported by Lian Li, GIGABYTE or Corsair. Portions are ported from OpenRGB under the same licence." />
+                    <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                        <Button Content="GitHub repository" Click="GitHub_Click" Margin="0,0,8,0" />
+                        <Button Content="Releases" Click="Releases_Click" Margin="0,0,8,0" />
+                        <Button Content="GIGABYTE support page" Click="Support_Click" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

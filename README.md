@@ -1,6 +1,6 @@
 # MyLianPC
 
-[![version](https://img.shields.io/badge/version-0.10.5--beta-orange)](https://github.com/abdh01h/MyLianPC/releases)
+[![version](https://img.shields.io/badge/version-0.11.2--beta-orange)](https://github.com/abdh01h/MyLianPC/releases)
 [![platform](https://img.shields.io/badge/platform-Windows%2011%20x64-0078D6)](#requirements)
 [![.NET](https://img.shields.io/badge/.NET-10-512BD4)](#technology-stack)
 [![license](https://img.shields.io/badge/license-GPL--2.0--or--later-blue)](LICENSE)
@@ -9,7 +9,7 @@ One Windows app for the **RGB lighting, cooler LCD, fan curves and hardware moni
 **GIGABYTE B850 AORUS ELITE WIFI7 + Lian Li HydroShift II LCD-C + Corsair Vengeance RGB DDR5 + Lian Li Vector V100R**,
 replacing L-Connect 3, GIGABYTE Control Center and Corsair's service with a single background service and one window.
 
-> ⚠️ **Beta 0.10** — feature complete for the hardware listed below, but still being tested. Expect rough edges, and
+> ⚠️ **Beta 0.11** — feature complete for the hardware listed below, but still being tested. Expect rough edges, and
 > expect every change to reach the hardware immediately (there is no simulation layer).
 
 It talks to the hardware directly (USB HID, WinUSB and SMBus). Nothing is simulated: every control in the app maps to a
@@ -49,7 +49,7 @@ If you close the window, sign out, switch accounts or lock the PC, lighting, the
 | **.NET runtime** | **Not required.** The installer ships a self-contained build of .NET 10 |
 | **PawnIO driver** | Required for CPU temperature, motherboard fan headers and RAM lighting. The installer installs it with `winget`; if `winget`/App Installer is missing, install it once from [pawnio.eu](https://pawnio.eu) before or after setup. It is a signed kernel driver — Microsoft blocks the older WinRing0 driver, so this is the supported route |
 | **Disk space** | About 150 MB for the program, plus profiles and logs in `C:\ProgramData\MyLianPC` |
-| **Internet** | Only for the download, and for the one-time PawnIO install through `winget`. The app never phones home |
+| **Internet** | Only for the download, the one-time PawnIO install through `winget`, and the optional driver check on **Drivers** (a request to GIGABYTE's public support page, made when you open that page — at most once a day — or press **Check for updates**). No telemetry, no account, and nothing about you or this PC is sent |
 | **Vendor software** | L-Connect 3, GIGABYTE Control Center and Corsair Device Control Service must not run at the same time (WinUSB and SMBus are single-owner). The installer disables their autostart; nothing is uninstalled and **Settings → Vendor software → Restore** puts it back |
 | **BIOS** | Nothing to change. The app never writes BIOS settings. Motherboard fan-header curves are opt-in (Devices page) |
 
@@ -71,7 +71,7 @@ its fans through motherboard PWM headers.
 
 ## Install
 
-1. Download `MyLianPC-Setup-0.10.5-beta.exe` (or the zip) from the [releases](https://github.com/abdh01h/MyLianPC/releases).
+1. Download `MyLianPC-Setup-0.11.2-beta.exe` (or the zip) from the [releases](https://github.com/abdh01h/MyLianPC/releases).
 2. Run it and approve the administrator prompt. Keep **Take over from vendor software** checked. This disables
    L-Connect 3's services, Corsair Device Control Service and GIGABYTE Control Center's sign-in task. Nothing is
    uninstalled, and **Settings → Vendor software → Restore** puts them back.
@@ -101,9 +101,12 @@ restored to how it was before. Profiles in `C:\ProgramData\MyLianPC` are kept un
 | Lighting | Motherboard ARGB headers (case strip and fans), chipset accent, LED_C, both RAM modules and the pump ring from one page. Same effect everywhere or per zone; static, breathing, flash, color cycle, rainbow, rainbow wave, wave, gradient (per device where supported); hex input, palette and saved colors, brightness, speed |
 | Cooler LCD | 20+ themes (minimal temps, system overview, gaming dashboard, circular gauges, cyberpunk, toxic HUD, synthwave HUD, ice HUD, ember HUD, dark neon, CPU & GPU monitor, image/GIF, minimal clock, analog clock, cooling focus, load bars, power draw, status list, diagonal split, multi-metric, custom layout with movable widgets); colors, fonts, text size, °C/°F, 12- or 24-hour clock, gauge style, metric selection, brightness, rotation, refresh rate, live preview |
 | Cooling | Pump and radiator-fan curves following CPU, GPU or coolant temperature; Silent, Case fans, Balanced, Performance and Maximum presets, fixed speed, minimum speed, hysteresis; the preset saved in the active profile is highlighted ("In use: the Silent preset, saved in 'Work'"); validated curves with a 100% failsafe; optional control of motherboard fan headers (chassis fans start on the quiet Case fans curve) |
-| Monitoring | CPU/GPU temperature, load, clock, power; memory usage, memory temperature, memory speed and whether EXPO/XMP is active; coolant; pump and fan RPM; storage health; gauges, one card per component with all of its readings, history charts |
+| Monitoring | CPU/GPU temperature, load, clock, power; GPU memory (VRAM) size shown with the GPU name, plus used and free; memory usage, available memory, memory temperature, memory speed and whether EXPO/XMP is active; coolant; pump and fan RPM; storage health; gauges, one card per component with all of its readings, history charts. The cooler card is hidden by default (the Cooling page covers the pump and fans); enable it in **Customize** |
+| Connection | Wi-Fi network name, signal, band and channel; IPv4 and IPv6 addresses, gateway, DNS, MAC and link speed; live download and upload rates, today's downloaded and uploaded totals in GB, and a live throughput chart. Sampled by the service, so today's totals keep counting while the window is closed |
+| Drivers | Installed BIOS against GIGABYTE's newest for this exact board, and every current driver and utility package matched to what Windows reports (up to date, update available, newer installed, not detected, check manually), with download links. Nothing is installed automatically |
 | Profiles | Gaming, Work, Silent, Night Mode, Custom RGB, Maximum Cooling examples; create, rename, duplicate, delete, import, export, activate; per-device apply report. One shared list for the PC; each Windows account remembers the profile it last activated, and signing in applies it |
-| Windows | Runs as a service from boot for **every Windows account**; re-asserts lighting after account switches; Dark, Light and System appearance (follows Windows live); tray icon; start with Windows can be turned on or off in the installer or in Settings (the service always starts either way) |
+| Windows | Runs as a service from boot for **every Windows account**; re-asserts lighting after account switches; Dark, Light and System appearance (follows Windows live); tray icon; right-click any reading to copy its text; start with Windows can be turned on or off in the installer or in Settings (the service always starts either way) |
+| About | App version, build date, runtime, install and data folders, service version and state, and the hardware detected on this PC |
 
 ## Technology stack
 
@@ -177,12 +180,12 @@ dotnet test                                                   # unit tests
 powershell -ExecutionPolicy Bypass -File build\publish.ps1    # artifacts\MyLianPC, zip, and setup .exe if Inno Setup 6 is installed
 ```
 
-The publish script reads the version from `src/MyLianPC.App/MyLianPC.App.csproj` (`0.10.5-beta`), so bumping that one
+The publish script reads the version from `src/MyLianPC.App/MyLianPC.App.csproj` (`0.11.2-beta`), so bumping that one
 property renames the zip and the setup executable.
 
 | Project | Role |
 |---|---|
-| `src/MyLianPC.Core` | Profiles, validation, fan-curve logic, effects, settings, IPC contract and client |
+| `src/MyLianPC.Core` | Profiles, validation, fan-curve logic, effects, settings, IPC contract and client, network traffic math and the GIGABYTE support-page parser |
 | `src/MyLianPC.Hardware` | Device drivers (Fusion2 HID, Corsair DRAM over PawnIO SMBus, HydroShift II over WinUSB), sensor hub, adapters |
 | `src/MyLianPC.Lcd` | LCD themes, image/GIF decoding, JPEG encoding (SkiaSharp) |
 | `src/MyLianPC.Service` | Windows service: device ownership, cooling loop, LCD loop, session handling, named-pipe server, vendor takeover |

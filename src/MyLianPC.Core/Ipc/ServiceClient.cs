@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using MyLianPC.Core.Devices;
 using MyLianPC.Core.Lighting;
+using MyLianPC.Core.Network;
 using MyLianPC.Core.Profiles;
 using MyLianPC.Core.Sensors;
 using MyLianPC.Core.Settings;
@@ -69,6 +70,7 @@ public sealed class ServiceClient : IAsyncDisposable
 
     public Task<ServiceStatus> StatusAsync(CancellationToken ct = default) => CallAsync<ServiceStatus>(Methods.Status, null, ct);
     public Task<SensorSnapshot> SensorsAsync(CancellationToken ct = default) => CallAsync<SensorSnapshot>(Methods.Sensors, null, ct);
+    public Task<NetworkSnapshot> NetworkAsync(CancellationToken ct = default) => CallAsync<NetworkSnapshot>(Methods.Network, null, ct);
     public Task<ProfileDocument> ProfilesAsync() => CallAsync<ProfileDocument>(Methods.ProfilesList);
     public Task<JsonElement> SaveProfileAsync(HardwareProfile p) => CallAsync<JsonElement>(Methods.ProfileSave, p);
     public Task<ApplyReport> ActivateAsync(Guid id) => CallAsync<ApplyReport>(Methods.ProfileActivate, id);

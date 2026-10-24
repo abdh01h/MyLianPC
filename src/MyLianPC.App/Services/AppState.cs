@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using MyLianPC.Core.Ipc;
+using MyLianPC.Core.Network;
 using MyLianPC.Core.Profiles;
 using MyLianPC.Core.Sensors;
 using MyLianPC.Core.Settings;
@@ -62,8 +63,13 @@ public sealed partial class AppState : ObservableObject
     public ServiceClient Client { get; } = new();
     public Dictionary<string, MetricHistory> History { get; } = [];
 
+    /// <summary>Network throughput in MB/s, one sample per sensor tick.</summary>
+    public MetricHistory DownloadHistory { get; } = new(300);
+    public MetricHistory UploadHistory { get; } = new(300);
+
     [ObservableProperty] private ServiceStatus? _status;
     [ObservableProperty] private SensorSnapshot _sensors = new();
+    [ObservableProperty] private NetworkSnapshot _network = new();
     [ObservableProperty] private ProfileDocument _profiles = new();
     [ObservableProperty] private UserPreferences _preferences = UserPreferences.Load(UserPreferences.DefaultPath).Normalized();
     [ObservableProperty] private bool _serviceConnected;
@@ -159,6 +165,19 @@ public sealed partial class AppState : ObservableObject
                 if (!History.TryGetValue(m.Key, out var h)) History[m.Key] = h = new MetricHistory(300);
                 h.Add(Sensors[m.Key]);
             }
+
+            try
+            {
+                Network = await Client.NetworkAsync();
+                DownloadHistory.Add(Network.DownloadBytesPerSecond / (1024.0 * 1024.0));
+                UploadHistory.Add(Network.UploadBytesPerSecond / (1024.0 * 1024.0));
+            }
+            catch (Exception e) when (e is ServiceUnavailableException or ServiceCallException or IOException)
+            {
+                // An older service has no network method: keep the card hidden rather than calling the whole
+                // connection lost, and never discard the last good sample over a transient failure.
+            }
+
             SensorsUpdated?.Invoke(this, EventArgs.Empty);
         }
         catch (Exception e) when (e is ServiceUnavailableException or IOException or ServiceCallException) { SetConnected(false, e.Message); }

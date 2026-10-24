@@ -5,6 +5,7 @@ public static class Metrics
 {
     public const string CpuTemp = "cpu.temp", CpuLoad = "cpu.load", CpuClock = "cpu.clock", CpuPower = "cpu.power";
     public const string GpuTemp = "gpu.temp", GpuLoad = "gpu.load", GpuClock = "gpu.clock", GpuPower = "gpu.power", GpuFan = "gpu.fan";
+    public const string GpuVramUsed = "gpu.vram.used", GpuVramTotal = "gpu.vram.total", GpuVramFree = "gpu.vram.free";
     public const string RamLoad = "ram.load", RamUsedGb = "ram.used", RamTotalGb = "ram.total";
     public const string RamTemp = "ram.temp", RamSpeed = "ram.speed", RamXmp = "ram.xmp";
     public const string StorageTemp = "storage.temp", StorageHealth = "storage.health";
@@ -24,6 +25,9 @@ public static class Metrics
         new(GpuClock, "GPU clock", "MHz", "GPU"),
         new(GpuPower, "GPU power", "W", "GPU"),
         new(GpuFan, "GPU fan", "RPM", "GPU"),
+        new(GpuVramTotal, "VRAM total", "GB", "GPU"),
+        new(GpuVramUsed, "VRAM used", "GB", "GPU"),
+        new(GpuVramFree, "VRAM free", "GB", "GPU"),
         new(RamLoad, "Memory usage", "%", "Memory"),
         new(RamUsedGb, "Memory used", "GB", "Memory"),
         new(RamTemp, "Memory temperature", "°C", "Memory"),

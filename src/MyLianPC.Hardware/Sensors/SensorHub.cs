@@ -77,8 +77,7 @@ public sealed class SensorHub : IDisposable
                 return null;
             }
 
-            var cpu = Hw(HardwareType.Cpu);
-            var gpu = _computer.Hardware.FirstOrDefault(h => h.HardwareType == HardwareType.GpuNvidia)
+            var cpu = Hw(HardwareType.Cpu);            var gpu = _computer.Hardware.FirstOrDefault(h => h.HardwareType == HardwareType.GpuNvidia)
                       ?? _computer.Hardware.FirstOrDefault(h => h.HardwareType == HardwareType.GpuAmd && !h.Name.Contains("Radeon(TM) Graphics", StringComparison.OrdinalIgnoreCase))
                       ?? Hw(HardwareType.GpuAmd, HardwareType.GpuIntel);
             var mem = _computer.Hardware.FirstOrDefault(h => h.HardwareType == HardwareType.Memory && h.Name.Contains("Total", StringComparison.OrdinalIgnoreCase))
@@ -93,6 +92,16 @@ public sealed class SensorHub : IDisposable
             values[Metrics.GpuClock] = Positive(S(gpu, SensorType.Clock, "GPU Core"));
             values[Metrics.GpuPower] = Positive(S(gpu, SensorType.Power, "GPU Package", "GPU Power", "GPU Core"));
             values[Metrics.GpuFan] = S(gpu, SensorType.Fan, "GPU Fan 1", "GPU Fan");
+            // LibreHardwareMonitor reports GPU memory as SmallData in megabytes ("D3D Dedicated" is the fallback
+            // when the vendor API exposes no VRAM counters). The dashboard and LCD show gigabytes.
+            double? vramUsed = S(gpu, SensorType.SmallData, "GPU Memory Used", "D3D Dedicated Memory Used");
+            double? vramTotal = S(gpu, SensorType.SmallData, "GPU Memory Total");
+            double? vramFree = S(gpu, SensorType.SmallData, "GPU Memory Free");
+            if (vramTotal is null && vramUsed is { } u0 && vramFree is { } f0) vramTotal = u0 + f0;
+            if (vramFree is null && vramTotal is { } t0 && vramUsed is { } u1) vramFree = Math.Max(0, t0 - u1);
+            values[Metrics.GpuVramTotal] = Gigabytes(vramTotal);
+            values[Metrics.GpuVramUsed] = Gigabytes(vramUsed);
+            values[Metrics.GpuVramFree] = Gigabytes(vramFree);
             values[Metrics.RamLoad] = S(mem, SensorType.Load, "Memory");
             var used = S(mem, SensorType.Data, "Memory Used");
             var avail = S(mem, SensorType.Data, "Memory Available");
@@ -313,6 +322,10 @@ public sealed class SensorHub : IDisposable
     }
 
     private static double? Positive(double? v) => v is > 0 ? v : null;
+
+    /// <summary>Megabytes (LibreHardwareMonitor's SmallData unit) to gigabytes, rounded to what the cards show.</summary>
+    private static double? Gigabytes(double? megabytes) =>
+        megabytes is >= 0 ? Math.Round(megabytes.Value / 1024, 1) : null;
 
     private static double? Average(IHardware? hw, SensorType type, string prefix)
     {

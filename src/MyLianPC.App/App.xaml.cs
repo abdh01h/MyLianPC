@@ -16,16 +16,24 @@ public partial class App : Application
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
-        _instance = new Mutex(true, InstanceMutex, out bool first);
-        if (!first)
+
+        string? Arg(string name) => e.Args.SkipWhile(a => a != name).Skip(1).FirstOrDefault();
+        // The offscreen render used for visual checks is a developer aid that exits by itself; it must be able to
+        // run while the normal app is open, so it does not take the single-instance slot.
+        bool screenshot = Arg("--screenshot") is not null;
+        if (!screenshot)
         {
-            // Another instance runs in this Windows session: bring it to the front and exit.
-            try { EventWaitHandle.OpenExisting(ShowEvent).Set(); } catch (WaitHandleCannotBeOpenedException) { }
-            Shutdown();
-            return;
+            _instance = new Mutex(true, InstanceMutex, out bool first);
+            if (!first)
+            {
+                // Another instance runs in this Windows session: bring it to the front and exit.
+                try { EventWaitHandle.OpenExisting(ShowEvent).Set(); } catch (WaitHandleCannotBeOpenedException) { }
+                Shutdown();
+                return;
+            }
+            _showSignal = new EventWaitHandle(false, EventResetMode.AutoReset, ShowEvent);
+            new Thread(() => { while (_showSignal.WaitOne()) Dispatcher.Invoke(ShowWindow); }) { IsBackground = true }.Start();
         }
-        _showSignal = new EventWaitHandle(false, EventResetMode.AutoReset, ShowEvent);
-        new Thread(() => { while (_showSignal.WaitOne()) Dispatcher.Invoke(ShowWindow); }) { IsBackground = true }.Start();
 
         var state = AppState.Current;
         SystemIntegration.ApplyTheme(state.Preferences.Appearance);
@@ -36,7 +44,6 @@ public partial class App : Application
             args.Handled = true;
         };
 
-        string? Arg(string name) => e.Args.SkipWhile(a => a != name).Skip(1).FirstOrDefault();
         if (Arg("--theme") is { } t && Enum.TryParse<Core.Settings.AppearanceMode>(t, true, out var forced)) SystemIntegration.ApplyTheme(forced);
 
         _tray = new TrayIcon(ShowWindow, ExitApp);

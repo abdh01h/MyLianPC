@@ -24,6 +24,7 @@ public static class Methods
 {
     public const string Status = "status.get";
     public const string Sensors = "sensors.get";
+    public const string Network = "network.get";
     public const string ProfilesList = "profiles.list";
     public const string ProfileSave = "profiles.save";
     public const string ProfileDelete = "profiles.delete";
